@@ -11,7 +11,7 @@ sudo apt install build-essential clang flex g++ gawk gcc-multilib gettext \
   coccinelle
 
 # 代码克隆
-git clone https://gitee.com/QHCH/openrax3000q.git
+git clone https://github.com/David-Croose/openrax3000q
 cd openrax3000q
 
 # 下载和安装openwrt、本仓库自有代码
@@ -25,6 +25,8 @@ cp .config_rax3000q .config
 make menuconfig
 
 # 下载代码
+wget <本仓库的release的dl.tar.bz2>
+tar -xf /path/to/dl.tar.bz2 -C .
 make -j16 download
 
 # 编译
