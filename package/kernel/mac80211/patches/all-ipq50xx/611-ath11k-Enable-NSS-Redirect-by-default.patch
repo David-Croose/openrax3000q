@@ -1,0 +1,26 @@
+From ee0decbbf5dd376cec27db9acdb13e118e4315b2 Mon Sep 17 00:00:00 2001
+From: hzy <hzyitc@outlook.com>
+Date: Fri, 10 Feb 2023 08:25:19 +0000
+Subject: [PATCH] ath11k: Enable NSS Redirect by default
+
+Signed-off-by: hzy <hzyitc@outlook.com>
+---
+ net/mac80211/iface.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index deaf232..b91de0b 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -27,7 +27,7 @@
+ #include "rate.h"
+ 
+ #ifdef CPTCFG_MAC80211_NSS_SUPPORT
+-bool nss_redirect = false;
++bool nss_redirect = true;
+ module_param(nss_redirect, bool, 0644);
+ MODULE_PARM_DESC(nss_redirect, "module param to enable NSS Redirect; 1-enable, 0-disable");
+ #endif
+-- 
+2.25.1
+

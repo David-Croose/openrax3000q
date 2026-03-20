@@ -1,0 +1,11 @@
+--- a/ath10k-5.10/debug.c
++++ b/ath10k-5.10/debug.c
+@@ -1379,7 +1379,7 @@
+ 		"INFO-AS-DBG: 0x40000000\n"
+ 		"FW:          0x80000000\n"
+ 		"ALL:         0xEFFFFFFF\n";
+-	char wbuf[sizeof(buf) + 60];
++	static char wbuf[sizeof(buf) + 60];
+ 	sz = snprintf(wbuf, sizeof(wbuf), "Current debug level: 0x%x\n\n%s",
+ 		      ath10k_debug_mask, buf);
+ 	wbuf[sizeof(wbuf) - 1] = 0;

@@ -1,0 +1,11 @@
+{
+	"luci-app-sakurafrp": {
+		"description": "Grant access to	LuCI app sakurafrp",
+		"read":	{
+			"uci": [ "natfrp" ]
+		},
+		"write": {
+			"uci": [ "natfrp" ]
+		}
+	}
+}

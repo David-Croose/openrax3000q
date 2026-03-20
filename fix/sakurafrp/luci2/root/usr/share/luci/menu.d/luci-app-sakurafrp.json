@@ -1,0 +1,13 @@
+{
+    "admin/vpn/sakurafrp": {
+        "title": "Sakura FRP",
+        "order": 50,
+        "action": {
+			"type": "view",
+			"path": "luci-app-sakurafrp"
+        },
+        "depends": {
+            "acl": ["luci-app-sakurafrp"]
+        }
+    }
+}

@@ -1,0 +1,17 @@
+--- a/module.c
++++ a/module.c
+@@ -193,7 +193,7 @@
+   return success;
+ }
+ 
+-static void __exit exit(void)
++static void __exit gl_exit(void)
+ {
+   disable_irq(gpio_to_irq(gpio_rx));
+   hrtimer_cancel(&timer_tx);
+@@ -206,5 +206,5 @@
+ }
+ 
+ module_init(init);
+-module_exit(exit);
++module_exit(gl_exit);

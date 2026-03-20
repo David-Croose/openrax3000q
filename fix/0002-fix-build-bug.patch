@@ -1,0 +1,31 @@
+--- a/kernel/pf_ring.c
++++ b/kernel/pf_ring.c
+@@ -3934,16 +3934,12 @@
+ 
+   case cluster_per_flow_tcp_5_tuple:
+   case cluster_per_inner_flow_tcp_5_tuple:
+-    if(l3_proto == IPPROTO_TCP)
+-    {
+-      flags |= mask_5_tuple;
+-      break;
+-    }
+-    /* else, fall through, because it's like 2-tuple for non-TCP packets */
+-
+   case cluster_per_flow_2_tuple:
+   case cluster_per_inner_flow_2_tuple:
+-    flags |= mask_2_tuple;
++    if (cluster_mode == cluster_per_inner_flow_tcp_5_tuple && l3_proto == IPPROTO_TCP)
++      flags |= mask_5_tuple;
++    else
++      flags |= mask_2_tuple;
+     break;
+ 
+   case cluster_per_flow_4_tuple:
+@@ -3959,6 +3955,7 @@
+     printk("[PF_RING] undefined clustering type.\n");
+   }
+ 
++
+   return hash_pkt_header(hdr, flags);
+ }
+ 

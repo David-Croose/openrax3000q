@@ -1,0 +1,49 @@
+--- a/extensions/LUA/xt_LUA_target.c
+--- b/extensions/LUA/xt_LUA_target.c
+@@ -136,7 +136,7 @@
+ 	int32_t ret;
+ 	struct lua_env * env = kmalloc(sizeof(struct lua_env), GFP_KERNEL);
+ 
+-	if (!script_size > 0) {
++	if (!script_size) {
+ 		pr_debug("LUA [%d]: script_size %lu < 0\n", state_id, script_size);
+ 		return false;
+ 	}
+--- a/extensions/LUA/byte_array.c
++++ b/extensions/LUA/byte_array.c
+./build_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/linux-ipq50xx_arm/xtables-addons-3.21/extensions/LUA/byte_array.c
+@@ -107,12 +107,22 @@
+ static int32_t byte_array_to_string(lua_State *L)
+ {
+ 	lua_packet_segment * array = checkbytearray(L, 1);
+-	uint8_t buf[(array->length * 3) + 255];
++	uint8_t *buf;
+ 	uint8_t hexval[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+-	char res[255 + (array->length * 3)]; /* make sure the buffer is big enough*/
++	char *res;
+ 	int32_t i, n;
+ 	uint8_t *ptr = array->start + array->offset;
+ 
++	buf = kmalloc((array->length * 3) + 255, GFP_KERNEL);
++	if (!buf)
++		return 1;
++
++	res = kmalloc(255 + (array->length * 3), GFP_KERNEL); /* make sure the buffer is big enough*/
++	if (!res) {
++		kfree(buf);
++		return 1;
++	}
++
+ 	for (i = 0; i < array->length; i++) {
+ 		buf[i * 3] = hexval[(ptr[i] >> 4) & 0xF];
+ 		buf[(i * 3) + 1] = hexval[ptr[i] & 0x0F];
+@@ -124,6 +134,9 @@
+ 
+ 	lua_pushlstring(L, res, n);
+ 
++	kfree(buf);
++	kfree(res);
++
+ 	return 1;
+ }
+ 

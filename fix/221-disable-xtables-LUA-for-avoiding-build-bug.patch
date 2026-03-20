@@ -1,0 +1,8 @@
+--- a/mconfig
+--- b/mconfig
+@@ -24,4 +24,4 @@
+ build_psd=m
+ build_quota2=m
+ build_rtsp=m
+-build_LUA=m
++build_LUA=n
