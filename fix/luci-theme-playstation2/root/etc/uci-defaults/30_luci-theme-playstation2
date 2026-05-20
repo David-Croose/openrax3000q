@@ -1,0 +1,12 @@
+#!/bin/sh
+
+if [ "$PKG_UPGRADE" != 1 ]; then
+	uci get luci.themes.PlayStation2 >/dev/null 2>&1 || \
+	uci batch <<-EOF
+		set luci.themes.PlayStation2=/luci-static/playstation2
+		set luci.main.mediaurlbase=/luci-static/playstation2
+		commit luci
+	EOF
+fi
+
+exit 0

@@ -1,0 +1,759 @@
+:root {
+	--main-color: #003399;
+	--header-bg: rgba(0, 0, 0, 0.3);
+	--header-color: #fff;
+	--bar-bg: #5bc0de;
+	--menu-bg-color: transparent;
+	--menu-color: #ffffff;
+	--menu-color-hover: #ffffff;
+	--main-menu-color: #ffffff;
+	--submenu-bg-hover: transparent;
+	--submenu-bg-hover-active: rgba(255, 255, 255, 0.1);
+	--font-body: "Microsoft Yahei", "WenQuanYi Micro Hei", "sans-serif", "Helvetica Neue", "Helvetica", "Hiragino Sans GB";
+}
+
+body {
+	background: transparent !important;
+	color: #ffffff !important;
+	text-shadow: 0 0 8px rgba(255, 255, 255, 0.4), 0 0 16px rgba(200, 220, 255, 0.2) !important;
+}
+
+#fog-background {
+	position: fixed !important;
+	top: 0 !important;
+	left: 0 !important;
+	width: 100% !important;
+	height: 100% !important;
+	z-index: -1 !important;
+	pointer-events: none !important;
+}
+
+#clock-background {
+	position: fixed !important;
+	top: 50% !important;
+	left: 50% !important;
+	transform: translate(-50%, -50%) !important;
+	width: 88vmin !important;
+	height: 88vmin !important;
+	z-index: 1 !important;
+	pointer-events: none !important;
+	opacity: 0.9 !important;
+	border-radius: 50% !important;
+	box-shadow: none !important;
+}
+
+.main-left {
+	background: transparent !important;
+	backdrop-filter: none !important;
+	-webkit-backdrop-filter: none !important;
+	border-right: none !important;
+}
+
+.main-right {
+	background: transparent !important;
+}
+
+#maincontent {
+	background: transparent !important;
+}
+
+#maincontent > .container {
+	background: transparent !important;
+}
+
+.cbi-section,
+.cbi-section-error,
+#iptables,
+.Firewall form,
+#cbi-network > .cbi-section-node,
+#cbi-wireless > .cbi-section-node,
+#cbi-wireless > #wifi_assoclist_table,
+[data-tab-title],
+[data-page^="admin-system-admin"]:not(.node-main-login) .cbi-map:not(#cbi-dropbear),
+[data-page="admin-system-opkg"] #maincontent > .container {
+	background: rgba(255, 255, 255, 0.08) !important;
+	backdrop-filter: blur(16px) saturate(180%) !important;
+	-webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+	border: 1px solid rgba(255, 255, 255, 0.15) !important;
+	border-radius: 12px;
+	color: #ffffff !important;
+	text-shadow: 0 0 8px rgba(255, 255, 255, 0.4), 0 0 16px rgba(200, 220, 255, 0.2) !important;
+	box-shadow: 
+		0 4px 24px rgba(100, 140, 220, 0.1),
+		inset 0 1px 20px rgba(200, 220, 255, 0.08) !important;
+}
+
+table,
+.table {
+	background: transparent !important;
+	backdrop-filter: none !important;
+	-webkit-backdrop-filter: none !important;
+	border-radius: 0 !important;
+	border: none !important;
+	color: #ffffff !important;
+	text-shadow: 0 0 6px rgba(255, 255, 255, 0.3) !important;
+	box-shadow: none !important;
+}
+
+table tr,
+table td,
+table th,
+.table tr,
+.table td,
+.table th {
+	background: transparent !important;
+	border-color: rgba(255, 255, 255, 0.08) !important;
+	color: #ffffff !important;
+}
+
+.network-status-table {
+	background: transparent !important;
+	backdrop-filter: none !important;
+	-webkit-backdrop-filter: none !important;
+	border: none !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+}
+
+.network-status-table tr,
+.network-status-table td,
+.network-status-table th {
+	background: transparent !important;
+	border-color: rgba(255, 255, 255, 0.08) !important;
+	color: #ffffff !important;
+}
+
+.ifacebox {
+	background: transparent !important;
+	backdrop-filter: none !important;
+	-webkit-backdrop-filter: none !important;
+	border: none !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+}
+
+.ifacebox * {
+	background: transparent !important;
+	border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.cbi-progressbar {
+	background: transparent !important;
+	backdrop-filter: none !important;
+	-webkit-backdrop-filter: none !important;
+	border: 1px solid rgba(255, 255, 255, 0.15) !important;
+	border-radius: 4px !important;
+	box-shadow: none !important;
+}
+
+.cbi-progressbar > div {
+	background: linear-gradient(90deg, 
+		rgba(100, 180, 255, 0.6) 0%, 
+		rgba(140, 200, 255, 0.8) 50%,
+		rgba(100, 180, 255, 0.6) 100%) !important;
+	border-radius: 3px !important;
+	box-shadow: 0 0 8px rgba(100, 180, 255, 0.4) !important;
+}
+
+.ifacebadge {
+	background: rgba(255, 105, 180, 0.2) !important;
+	backdrop-filter: blur(8px) saturate(150%) !important;
+	-webkit-backdrop-filter: blur(8px) saturate(150%) !important;
+	border: 1px solid rgba(255, 105, 180, 0.4) !important;
+	border-radius: 6px !important;
+	box-shadow: 
+		0 2px 12px rgba(255, 105, 180, 0.25),
+		inset 0 1px 10px rgba(255, 182, 218, 0.15) !important;
+	color: #fff0f5 !important;
+	text-shadow: 
+		0 0 8px rgba(255, 105, 180, 0.7),
+		0 0 16px rgba(255, 182, 218, 0.4) !important;
+}
+
+.ifacebadge * {
+	background: rgba(255, 105, 180, 0.15) !important;
+	border-color: rgba(255, 182, 218, 0.3) !important;
+	color: #fff0f5 !important;
+}
+
+abbr {
+	color: #ffff00 !important;
+	font-weight: bold !important;
+	text-shadow: 
+		0 0 8px rgba(255, 255, 0, 0.8),
+		0 0 16px rgba(255, 255, 0, 0.5),
+		0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+.alert,
+.alert-message {
+	background: rgba(255, 255, 255, 0.1) !important;
+	backdrop-filter: blur(14px) saturate(170%) !important;
+	-webkit-backdrop-filter: blur(14px) saturate(170%) !important;
+	border: 1px solid rgba(255, 255, 255, 0.18) !important;
+	border-radius: 8px;
+	color: #ffffff !important;
+	text-shadow: 0 0 8px rgba(255, 255, 255, 0.4), 0 0 16px rgba(200, 220, 255, 0.2) !important;
+	box-shadow: 
+		0 3px 18px rgba(100, 140, 220, 0.12),
+		inset 0 1px 16px rgba(200, 220, 255, 0.06) !important;
+}
+
+.alert-message {
+	background: rgba(255, 140, 50, 0.15) !important;
+	backdrop-filter: blur(18px) saturate(190%) brightness(1.08) !important;
+	-webkit-backdrop-filter: blur(18px) saturate(190%) brightness(1.08) !important;
+	border: 1px solid rgba(255, 160, 70, 0.35) !important;
+	border-left: 4px solid rgba(255, 130, 30, 0.7) !important;
+	border-radius: var(--glass-radius) !important;
+	color: #fff3e6 !important;
+	text-shadow: 
+		0 0 12px rgba(255, 160, 80, 0.6), 
+		0 0 24px rgba(255, 130, 50, 0.35),
+		0 2px 4px rgba(0, 0, 0, 0.25) !important;
+	box-shadow: 
+		0 5px 28px rgba(255, 140, 50, 0.2),
+		0 3px 16px rgba(255, 120, 30, 0.15),
+		inset 0 1px 22px rgba(255, 200, 120, 0.15),
+		inset 0 -1px 14px rgba(220, 100, 20, 0.1) !important;
+}
+
+.alert-message.warning {
+	background: rgba(255, 180, 60, 0.13) !important;
+	backdrop-filter: blur(16px) saturate(185%) brightness(1.05) !important;
+	-webkit-backdrop-filter: blur(16px) saturate(185%) brightness(1.05) !important;
+	border: 1px solid rgba(255, 200, 90, 0.32) !important;
+	border-left: 4px solid rgba(255, 170, 40, 0.65) !important;
+	color: #fff8e6 !important;
+	text-shadow: 
+		0 0 10px rgba(255, 190, 100, 0.55), 
+		0 0 20px rgba(255, 170, 70, 0.28),
+		0 2px 4px rgba(0, 0, 0, 0.28) !important;
+	box-shadow: 
+		0 4px 24px rgba(255, 170, 60, 0.17),
+		0 2px 12px rgba(255, 150, 40, 0.12),
+		inset 0 1px 20px rgba(255, 220, 140, 0.13),
+		inset 0 -1px 12px rgba(230, 130, 30, 0.09) !important;
+}
+
+.modal,
+.cbi-modal {
+	background: transparent !important;
+	backdrop-filter: none !important;
+	-webkit-backdrop-filter: none !important;
+	border: none !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+	padding: 1rem !important;
+}
+
+.modal *,
+.cbi-modal * {
+	background: transparent !important;
+	border-color: rgba(255, 255, 255, 0.08) !important;
+	color: #ffffff !important;
+	text-shadow: 
+		0 0 8px rgba(255, 255, 255, 0.5),
+		0 0 16px rgba(200, 220, 255, 0.3),
+		0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+.modal h1,
+.modal h2,
+.modal h3,
+.modal h4,
+.modal h5,
+.modal h6,
+.modal p,
+.modal label,
+.modal span,
+.modal div,
+.cbi-modal h1,
+.cbi-modal h2,
+.cbi-modal h3,
+.cbi-modal h4,
+.cbi-modal h5,
+.cbi-modal h6,
+.cbi-modal p,
+.cbi-modal label,
+.cbi-modal span,
+.cbi-modal div {
+	color: #ffffff !important;
+	text-shadow: 
+		0 0 8px rgba(255, 255, 255, 0.5),
+		0 0 16px rgba(200, 220, 255, 0.3) !important;
+}
+
+.cbi-section-node.cbi-section-node-tabbed {
+	background: transparent !important;
+	backdrop-filter: none !important;
+	-webkit-backdrop-filter: none !important;
+	border: none !important;
+	box-shadow: none !important;
+}
+
+.cbi-section-node.cbi-section-node-tabbed * {
+	background: transparent !important;
+	border-color: rgba(255, 255, 255, 0.08) !important;
+	color: #ffffff !important;
+	text-shadow: 
+		0 0 8px rgba(255, 255, 255, 0.5),
+		0 0 16px rgba(200, 220, 255, 0.3) !important;
+}
+
+.cbi-button-save,
+.cbi-page-actions .cbi-button-save,
+.cbi-page-actions .cbi-button-apply + .cbi-button-save {
+	position: relative !important;
+	padding-left: 2.5rem !important;
+	background: url(./icons/button_circle.svg) no-repeat 0.7rem center / 1.2rem 1.2rem !important;
+	background-color: transparent !important;
+}
+
+.cbi-button-save:hover,
+.cbi-page-actions .cbi-button-save:hover,
+.cbi-page-actions .cbi-button-apply + .cbi-button-save:hover {
+	background-image: url(./icons/button_circle.svg) !important;
+	background-repeat: no-repeat !important;
+	background-position: 0.7rem center !important;
+	background-size: 1.2rem 1.2rem !important;
+	padding-left: 2.5rem !important;
+}
+
+.cbi-button-reset,
+.cbi-button[value="Reset"],
+.cbi-page-actions .cbi-button-reset {
+	position: relative !important;
+	padding-left: 2.5rem !important;
+	background: url(./icons/button_cross.svg) no-repeat 0.7rem center / 1.2rem 1.2rem !important;
+	background-color: transparent !important;
+}
+
+.cbi-button-reset:hover,
+.cbi-button[value="Reset"]:hover,
+.cbi-page-actions .cbi-button-reset:hover {
+	background-image: url(./icons/button_cross.svg) !important;
+	background-repeat: no-repeat !important;
+	background-position: 0.7rem center !important;
+	background-size: 1.2rem 1.2rem !important;
+	padding-left: 2.5rem !important;
+}
+
+.cbi-button-apply,
+.cbi-page-actions .cbi-button-apply,
+.cbi-button[value="Apply"] {
+	position: relative !important;
+	padding-left: 2.5rem !important;
+	background: url(./icons/button_triangle.svg) no-repeat 0.7rem center / 1.2rem 1.2rem !important;
+	background-color: transparent !important;
+}
+
+.cbi-button-apply:hover,
+.cbi-page-actions .cbi-button-apply:hover,
+.cbi-button[value="Apply"]:hover {
+	background-image: url(./icons/button_triangle.svg) !important;
+	background-repeat: no-repeat !important;
+	background-position: 0.7rem center !important;
+	background-size: 1.2rem 1.2rem !important;
+	padding-left: 2.5rem !important;
+}
+
+header {
+	background: var(--header-bg) !important;
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+	color: #ffffff !important;
+	text-shadow: 0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(180, 200, 255, 0.3) !important;
+}
+
+footer {
+	background: transparent !important;
+	color: rgba(255, 255, 255, 0.9) !important;
+	text-shadow: 0 0 6px rgba(255, 255, 255, 0.3) !important;
+}
+
+h1, h2, h3, h4, h5, h6,
+.cbi-section > h3,
+.cbi-map-descr,
+.cbi-section-descr {
+	color: #ffffff !important;
+	text-shadow: 0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(180, 200, 255, 0.25) !important;
+}
+
+.cbi-tab {
+	background: rgba(0, 200, 80, 0.25) !important;
+	border: 1px solid rgba(0, 220, 100, 0.5) !important;
+	box-shadow:
+		0 2px 12px rgba(0, 200, 80, 0.25),
+		inset 0 1px 8px rgba(0, 220, 100, 0.15) !important;
+}
+
+.cbi-tab:hover {
+	background: rgba(0, 200, 80, 0.4) !important;
+	border-color: rgba(0, 220, 100, 0.7) !important;
+	box-shadow:
+		0 3px 16px rgba(0, 200, 80, 0.35),
+		inset 0 1px 10px rgba(0, 220, 100, 0.2) !important;
+}
+
+label,
+td,
+th,
+p,
+span,
+div,
+input[type="text"],
+input[type="password"],
+textarea,
+select,
+.cbi-input-text,
+.cbi-dropdown,
+.cbi-button,
+.btn,
+.cbi-value-title,
+.cbi-value-description,
+.cbi-optionals,
+.cbi-required,
+.cbi-page-actions {
+	color: #ffffff !important;
+	text-shadow: 0 0 6px rgba(255, 255, 255, 0.35), 0 0 12px rgba(200, 220, 255, 0.18) !important;
+}
+
+input[type="text"],
+input[type="password"],
+textarea,
+select,
+.cbi-input-text {
+	background: rgba(255, 255, 255, 0.1) !important;
+	backdrop-filter: blur(10px) saturate(150%) !important;
+	-webkit-backdrop-filter: blur(10px) saturate(150%) !important;
+	border: 1px solid rgba(255, 255, 255, 0.2) !important;
+	border-radius: 6px;
+	color: #ffffff !important;
+	box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.15), 0 1px 12px rgba(100, 140, 220, 0.08) !important;
+}
+
+.cbi-button,
+.btn {
+	background: rgba(255, 255, 255, 0.12) !important;
+	backdrop-filter: blur(12px) saturate(160%) !important;
+	-webkit-backdrop-filter: blur(12px) saturate(160%) !important;
+	border: 1px solid rgba(255, 255, 255, 0.22) !important;
+	border-radius: 6px;
+	color: #ffffff !important;
+	box-shadow: 
+		0 2px 14px rgba(100, 140, 220, 0.1),
+		inset 0 1px 12px rgba(200, 220, 255, 0.08) !important;
+	transition: all 0.3s ease !important;
+}
+
+.cbi-button:hover,
+.btn:hover {
+	background: rgba(255, 255, 255, 0.2) !important;
+	border-color: rgba(255, 255, 255, 0.35) !important;
+	box-shadow: 
+		0 4px 20px rgba(120, 160, 240, 0.18),
+		inset 0 1px 16px rgba(210, 230, 255, 0.12) !important;
+}
+
+ul.dropdown,
+.cbi-dropdown > ul.dropdown {
+	background: rgba(255, 255, 255, 0.1) !important;
+	backdrop-filter: blur(12px) saturate(160%) !important;
+	-webkit-backdrop-filter: blur(12px) saturate(160%) !important;
+	border: 1px solid rgba(255, 255, 255, 0.2) !important;
+	border-radius: 6px !important;
+	box-shadow:
+		0 2px 14px rgba(100, 140, 220, 0.15),
+		inset 0 1px 12px rgba(200, 220, 255, 0.08) !important;
+}
+
+ul.dropdown > li,
+.cbi-dropdown > ul.dropdown > li {
+	background: rgba(255, 255, 255, 0.06) !important;
+	border-color: rgba(255, 255, 255, 0.15) !important;
+	color: #ffffff !important;
+	text-shadow:
+		0 0 6px rgba(255, 255, 255, 0.4),
+		0 0 12px rgba(200, 220, 255, 0.25) !important;
+}
+
+@keyframes spinCubeY {
+	from { transform: translateY(-50%) rotateY(0deg) rotateX(15deg); }
+	to { transform: translateY(-50%) rotateY(360deg) rotateX(15deg); }
+}
+
+.main > .main-left > .nav > .slide > .menu,
+.main > .main-left > .nav > li > [data-title="Logout"],
+.main > .main-left > .nav > li > [data-title="Dashboard"] {
+	padding-left: 3rem !important;
+	position: relative;
+}
+
+.main > .main-left > .nav > .slide > .menu::before {
+	display: none !important;
+	content: none !important;
+}
+
+.main > .main-left > .nav > li:last-child::before {
+	display: none !important;
+	content: none !important;
+}
+
+.main > .main-left > .nav > li:last-child {
+	overflow: visible !important;
+}
+
+.main > .main-left > .nav > .slide > .menu,
+.main > .main-left > .nav > li > [data-title="Logout"],
+.main > .main-left > .nav > li > [data-title="Dashboard"] {
+	padding: 1.5rem 1rem 1.5rem 4rem !important;
+	background: transparent !important;
+	backdrop-filter: none !important;
+	-webkit-backdrop-filter: none !important;
+	border: none !important;
+	border-radius: 0 !important;
+	margin: 0 !important;
+	box-shadow: none !important;
+	position: relative !important;
+	color: #ffffff !important;
+	text-shadow: 0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(180, 200, 255, 0.3) !important;
+}
+
+.main > .main-left > .nav > .slide > .menu::after,
+.main > .main-left > .nav > li:last-child::after {
+	display: none !important;
+}
+
+.main > .main-left > .nav > li:last-child {
+	padding: 1.5rem 1rem 1.5rem 4rem !important;
+	margin: 6px 8px !important;
+	background: transparent !important;
+	backdrop-filter: none !important;
+	-webkit-backdrop-filter: none !important;
+	border: none !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+	position: relative !important;
+	color: #ffffff !important;
+	text-shadow: 0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(180, 200, 255, 0.3) !important;
+}
+
+.main > .main-left > .nav > .slide > .menu:hover,
+.main > .main-left > .nav > li:hover > [data-title="Logout"],
+.main > .main-left > .nav > li:hover > [data-title="Dashboard"],
+.main > .main-left > .nav > li:last-child:hover {
+	background: transparent !important;
+	border-color: transparent !important;
+	box-shadow: none !important;
+}
+
+.main > .main-left > .nav > .slide > .slide-menu > li > a,
+.main > .main-left > .nav > .slide > .slide-menu > .active > a,
+.main > .main-left > .nav > .slide > .slide-menu > li:not(.active):hover > a,
+.main > .main-left > .nav > li a {
+	color: #ffffff !important;
+	text-shadow: 0 0 8px rgba(255, 255, 255, 0.45), 0 0 16px rgba(180, 200, 255, 0.22) !important;
+}
+
+.cube-icon-wrap {
+	position: absolute !important;
+	left: 8px !important;
+	top: 50% !important;
+	width: 36px !important;
+	height: 36px !important;
+	transform-style: preserve-3d !important;
+	perspective: 250px !important;
+	z-index: 10 !important;
+}
+
+.cube-3d {
+	position: absolute !important;
+	width: 28px !important;
+	height: 28px !important;
+	left: 4px !important;
+	top: 4px !important;
+	transform-style: preserve-3d !important;
+	animation: spinCubeY 8s linear infinite !important;
+}
+
+.cube-side {
+	position: absolute !important;
+	width: 28px !important;
+	height: 28px !important;
+	border: none !important;
+	outline: none !important;
+	box-sizing: border-box !important;
+}
+
+.cube-side.front {
+	transform: translateZ(14px) !important;
+	background: linear-gradient(135deg, 
+		rgba(255, 255, 255, 0.75) 0%, 
+		rgba(200, 200, 200, 0.55) 50%,
+		rgba(160, 160, 160, 0.40) 100%) !important;
+	box-shadow: 
+		inset 3px 3px 15px rgba(255, 255, 255, 0.9), 
+		inset -2px -2px 10px rgba(100, 100, 100, 0.2) !important;
+}
+
+.cube-side.back {
+	transform: rotateY(180deg) translateZ(14px) !important;
+	background: linear-gradient(225deg, 
+		rgba(120, 120, 120, 0.35) 0%, 
+		rgba(90, 90, 90, 0.28) 50%,
+		rgba(70, 70, 70, 0.22) 100%) !important;
+	box-shadow: 
+		inset -2px -2px 10px rgba(60, 60, 60, 0.3),
+		inset 2px 2px 8px rgba(150, 150, 150, 0.15) !important;
+}
+
+.cube-side.right {
+	transform: rotateY(90deg) translateZ(14px) !important;
+	background: linear-gradient(135deg, 
+		rgba(210, 210, 210, 0.58) 0%, 
+		rgba(170, 170, 170, 0.45) 50%,
+		rgba(130, 130, 130, 0.35) 100%) !important;
+	box-shadow: 
+		inset 2px 2px 12px rgba(255, 255, 255, 0.65),
+		inset -2px -2px 8px rgba(90, 90, 90, 0.18) !important;
+}
+
+.cube-side.left {
+	transform: rotateY(-90deg) translateZ(14px) !important;
+	background: linear-gradient(225deg, 
+		rgba(110, 110, 110, 0.32) 0%, 
+		rgba(85, 85, 85, 0.26) 50%,
+		rgba(65, 65, 65, 0.20) 100%) !important;
+	box-shadow: 
+		inset -2px -2px 10px rgba(55, 55, 55, 0.28),
+		inset 2px 2px 8px rgba(140, 140, 140, 0.12) !important;
+}
+
+.cube-side.top {
+	transform: rotateX(90deg) translateZ(14px) !important;
+	background: linear-gradient(180deg, 
+		rgba(255, 255, 255, 0.82) 0%, 
+		rgba(220, 220, 220, 0.65) 45%,
+		rgba(180, 180, 180, 0.50) 100%) !important;
+	box-shadow: 
+		inset 0 3px 16px rgba(255, 255, 255, 0.95),
+		inset 0 -3px 10px rgba(120, 120, 120, 0.22) !important;
+}
+
+.cube-side.bottom {
+	transform: rotateX(-90deg) translateZ(14px) !important;
+	background: linear-gradient(0deg, 
+		rgba(80, 80, 80, 0.28) 0%, 
+		rgba(105, 105, 105, 0.36) 45%,
+		rgba(140, 140, 140, 0.44) 100%) !important;
+	box-shadow: 
+		inset 0 -2px 10px rgba(60, 60, 60, 0.25),
+		inset 0 3px 8px rgba(130, 130, 130, 0.20) !important;
+}
+
+.main > .main-left > .nav > .slide > .menu.active > .cube-icon-wrap .cube-side,
+.main > .main-left > .nav > li.active > .cube-icon-wrap .cube-side {
+	background: linear-gradient(135deg, 
+		rgba(180, 160, 255, 0.80) 0%, 
+		rgba(140, 100, 255, 0.65) 45%,
+		rgba(100, 60, 220, 0.55) 100%) !important;
+	box-shadow: 
+		inset 3px 3px 15px rgba(220, 200, 255, 0.85), 
+		inset -2px -2px 10px rgba(80, 40, 180, 0.35) !important;
+}
+
+.main > .main-left > .nav > .slide > .menu.active > .cube-icon-wrap .cube-side.front,
+.main > .main-left > .nav > li.active > .cube-icon-wrap .cube-side.front {
+	background: linear-gradient(135deg, 
+		rgba(220, 200, 255, 0.90) 0%, 
+		rgba(170, 140, 255, 0.78) 45%,
+		rgba(130, 90, 235, 0.68) 100%) !important;
+	box-shadow: 
+		inset 3px 3px 18px rgba(240, 230, 255, 0.95), 
+		inset -2px -2px 12px rgba(100, 60, 200, 0.30) !important;
+}
+
+.main > .main-left > .nav > .slide > .menu.active > .cube-icon-wrap .cube-side.top,
+.main > .main-left > .nav > li.active > .cube-icon-wrap .cube-side.top {
+	background: linear-gradient(180deg, 
+		rgba(240, 230, 255, 0.92) 0%, 
+		rgba(200, 180, 255, 0.82) 45%,
+		rgba(160, 130, 245, 0.72) 100%) !important;
+	box-shadow: 
+		inset 0 3px 18px rgba(255, 245, 255, 0.98),
+		inset 0 -3px 12px rgba(120, 80, 210, 0.35) !important;
+}
+
+@keyframes flowingLight {
+	0% {
+		background-position: -300% center;
+	}
+	100% {
+		background-position: 300% center;
+	}
+}
+
+.main > .main-left > .nav > .slide > .menu.active,
+.main > .main-left > .nav > li.active {
+	position: relative !important;
+	overflow: hidden !important;
+	background: linear-gradient(
+		90deg,
+		transparent 0%,
+		rgba(255, 255, 255, 0.01) 15%,
+		rgba(255, 255, 255, 0.03) 25%,
+		rgba(255, 255, 255, 0.06) 35%,
+		rgba(255, 255, 255, 0.10) 42%,
+		rgba(255, 255, 255, 0.14) 47%,
+		rgba(255, 255, 255, 0.16) 50%,
+		rgba(255, 255, 255, 0.14) 53%,
+		rgba(255, 255, 255, 0.11) 58%,
+		rgba(255, 255, 255, 0.07) 65%,
+		rgba(255, 255, 255, 0.04) 73%,
+		rgba(255, 255, 255, 0.02) 82%,
+		rgba(255, 255, 255, 0.005) 90%,
+		transparent 100%
+	) !important;
+	background-size: 400% 100% !important;
+	animation: flowingLight 4s linear infinite !important;
+	border-left: 2px solid rgba(255, 255, 255, 0.4) !important;
+}
+
+.main > .main-left > .nav > .slide > .menu.active::before,
+.main > .main-left > .nav > li.active::before {
+	content: '' !important;
+	position: absolute !important;
+	top: 0 !important;
+	left: -150% !important;
+	width: 150% !important;
+	height: 100% !important;
+	background: linear-gradient(
+		90deg,
+		transparent 0%,
+		rgba(255, 255, 255, 0.02) 18%,
+		rgba(255, 255, 255, 0.06) 30%,
+		rgba(255, 255, 255, 0.12) 40%,
+		rgba(255, 255, 255, 0.22) 48%,
+		rgba(255, 255, 255, 0.35) 52%,
+		rgba(255, 255, 255, 0.28) 56%,
+		rgba(255, 255, 255, 0.18) 62%,
+		rgba(255, 255, 255, 0.10) 70%,
+		rgba(255, 255, 255, 0.05) 78%,
+		rgba(255, 255, 255, 0.02) 86%,
+		rgba(255, 255, 255, 0.005) 93%,
+		transparent 100%
+	) !important;
+	animation: flowingLightOverlay 3s ease-in-out infinite !important;
+	z-index: 1 !important;
+	pointer-events: none !important;
+}
+
+@keyframes flowingLightOverlay {
+	0% {
+		left: -150%;
+	}
+	50%, 100% {
+		left: 150%;
+	}
+}

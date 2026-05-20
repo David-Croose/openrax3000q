@@ -14,3 +14,5 @@ cp -r fix/sakurafrp/luci2/ feeds/luci/applications/luci-app-sakurafrp
 rm -rf package/feeds/packages/sakurafrp/
 rm -rf feeds/packages/net/sakurafrp
 cp -r fix/sakurafrp/sakurafrp/ feeds/packages/net/sakurafrp
+
+cp -r fix/luci-theme-playstation2 feeds/luci/themes

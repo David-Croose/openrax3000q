@@ -1,0 +1,754 @@
+<%#
+	PlayStation2 Login Page with PS2 Boot Animation
+	Copyright 2015-2017 Lutty Yang <lutty@wcan.in>
+
+	Licensed to the public under the Apache License 2.0
+-%>
+
+<%
+blank_page = true
+%>
+
+<!DOCTYPE html>
+<html lang="<%=luci.i18n.context.lang%>">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#003399">
+<title><%:Login%> - LuCI</title>
+<style>
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+body {
+	width: 100vw;
+	height: 100vh;
+	background: #000;
+	overflow: hidden;
+	position: relative;
+}
+
+#three-canvas {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: 1;
+}
+
+.login-box {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 360px;
+	padding: 40px;
+	background: rgba(20, 20, 30, 0.85);
+	border-radius: 12px;
+	backdrop-filter: blur(10px);
+	border: 1px solid rgba(255,255,255,0.1);
+	z-index: 10;
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity 2.5s ease, transform 2.5s ease;
+}
+
+.login-box.visible {
+	opacity: 1;
+	visibility: visible;
+}
+
+#logo-overlay {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%) scaleY(0.7);
+	color: #ffffff;
+	font-family: Arial, sans-serif;
+	font-size: 36px;
+	font-weight: bold;
+	opacity: 0;
+	pointer-events: none;
+	text-shadow:
+		0 0 10px rgba(255, 255, 255, 0.8),
+		0 0 20px rgba(200, 220, 255, 0.6),
+		0 0 40px rgba(180, 200, 255, 0.4),
+		0 0 60px rgba(160, 180, 240, 0.2);
+	z-index: 20;
+	letter-spacing: 4px;
+	white-space: nowrap;
+	transition: opacity 0.5s ease;
+}
+
+.login-box h2 {
+	color: #fff;
+	text-align: center;
+	margin-bottom: 30px;
+	text-shadow:
+		-1px -1px 0 #000,
+		1px -1px 0 #000,
+		-1px 1px 0 #000,
+		1px 1px 0 #000,
+		0 0 10px rgba(255,255,255,0.3);
+	font-family: Arial, sans-serif;
+	letter-spacing: 2px;
+	display: none;
+}
+
+.cbi-map {
+	margin: 0;
+	padding: 0;
+	background: transparent;
+	border: none;
+	box-shadow: none;
+}
+
+.cbi-section {
+	margin: 0;
+	padding: 20px 0;
+	background: transparent;
+	border: none;
+	box-shadow: none;
+}
+
+.cbi-section-node {
+	padding: 0;
+}
+
+.cbi-value {
+	display: flex;
+	align-items: center;
+	margin-bottom: 25px;
+	padding: 0;
+}
+
+.cbi-value-title {
+	flex: 0 0 auto;
+	width: 80px;
+	color: #fff;
+	font-size: 14px;
+	text-align: left;
+	padding-right: 15px;
+	text-shadow: 0 0 6px rgba(255, 255, 255, 0.3);
+}
+
+.cbi-value-field {
+	flex: 1 1 auto;
+}
+
+.cbi-value-field input[type="text"],
+.cbi-value-field input[type="password"] {
+	width: 100%;
+	padding: 12px 15px;
+	background: rgba(255,255,255,0.07);
+	border: 1px solid rgba(255,255,255,0.2);
+	border-radius: 6px;
+	outline: none;
+	color: #fff;
+	font-size: 16px;
+	box-sizing: border-box;
+}
+
+.cbi-value-field input:focus {
+	border-color: rgba(0, 51, 153, 0.7);
+	box-shadow: 0 0 10px rgba(0, 51, 153, 0.5);
+}
+
+hr {
+	border: none;
+	border-top: 1px solid rgba(255,255,255,0.1);
+	margin: 20px 0;
+}
+
+.alert-message.error {
+	color: #ff4444;
+	text-align: center;
+	margin-bottom: 15px;
+	font-size: 14px;
+	padding: 10px;
+	background: rgba(255, 68, 68, 0.1);
+	border-radius: 6px;
+	border: 1px solid rgba(255, 68, 68, 0.2);
+}
+
+.btn,
+button.btn.cbi-button-positive.important {
+	width: 100%;
+	padding: 12px;
+	background: rgba(0, 51, 153, 0.9);
+	border: none;
+	border-radius: 6px;
+	color: #fff;
+	font-size: 16px;
+	cursor: pointer;
+	transition: 0.3s;
+	margin-top: 10px;
+}
+
+.btn:hover,
+button.btn.cbi-button-positive.important:hover {
+	background: rgba(0, 80, 200, 1);
+	box-shadow: 0 0 20px rgba(0, 100, 255, 0.6);
+}
+
+.login-footer {
+	text-align: center;
+	margin-top: 20px;
+	color: rgba(255,255,255,0.5);
+	font-size: 12px;
+}
+</style>
+</head>
+<body>
+<div id="logo-overlay">多宝物联</div>
+<div class="login-box" id="login-box">
+	<h2></h2>
+	<form method="post" action="<%=url('admin')%>" class="cbi-map">
+		<div class="cbi-section">
+			<div class="cbi-section-node">
+				<% if fuser then %>
+				<div class="alert-message error"><%:Invalid username and/or password! Please try again.%></div>
+				<% end %>
+				<div class="cbi-value">
+					<label class="cbi-value-title" for="luci_username"><%:Username%></label>
+					<div class="cbi-value-field">
+						<input name="luci_username" id="luci_username" type="text" autocomplete="username" <%=attr("value", duser)%>>
+					</div>
+				</div>
+				<div class="cbi-value">
+					<label class="cbi-value-title" for="luci_password"><%:Password%></label>
+					<div class="cbi-value-field">
+						<input name="luci_password" id="luci_password" type="password" autocomplete="current-password">
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<button class="btn cbi-button-positive important" type="submit">
+			<svg width="20" height="20" viewBox="0 0 100 100" style="vertical-align: middle; margin-right: 8px;">
+				<circle cx="50" cy="50" r="45" fill="#000000" />
+				<circle cx="50" cy="50" r="22" fill="none" stroke="#ff3333" stroke-width="8"/>
+			</svg>
+			<%:Login%>
+		</button>
+	</form>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function() {
+	var scene = new THREE.Scene();
+	var camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+	var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+	renderer.domElement.id = 'three-canvas';
+	renderer.setSize(window.innerWidth, window.innerHeight);
+	renderer.setPixelRatio(window.devicePixelRatio);
+	renderer.setClearColor(0x000000, 1);
+	document.body.insertBefore(renderer.domElement, document.body.firstChild);
+
+	camera.position.set(0, 0, 12);
+
+	var blocks = [];
+	var blockCount = 30;
+
+	for (var i = 0; i < blockCount; i++) {
+		var height = 0.4 + Math.random() * 0.8;
+		var width = 0.15 + Math.random() * 0.2;
+		var depth = 0.15 + Math.random() * 0.2;
+		var geometry = new THREE.BoxGeometry(width, height, depth);
+
+		var material = new THREE.MeshPhongMaterial({
+			color: new THREE.Color().setHSL(0.58 + Math.random() * 0.08, 0.2 + Math.random() * 0.2, 0.4 + Math.random() * 0.4),
+			shininess: 150,
+			specular: new THREE.Color(0x8888ff),
+			transparent: true,
+			opacity: 0.6 + Math.random() * 0.4
+		});
+
+		var block = new THREE.Mesh(geometry, material);
+
+		var angle = Math.random() * Math.PI * 2;
+		var radius = 1.5 + Math.random() * 3;
+		var y = (Math.random() - 0.5) * 4;
+
+		block.position.set(
+			Math.cos(angle) * radius,
+			y,
+			Math.sin(angle) * radius
+		);
+
+		block.rotation.set(-Math.PI / 2, 0, 0);
+
+		block.userData = {
+			rotationSpeed: {
+				x: (Math.random() - 0.5) * 0.015,
+				y: (Math.random() - 0.5) * 0.015,
+				z: (Math.random() - 0.5) * 0.015
+			},
+			orbitSpeed: (Math.random() - 0.5) * 0.003,
+			orbitRadius: radius,
+			orbitAngle: angle,
+			baseY: y,
+			bobSpeed: 0.3 + Math.random() * 0.5,
+			bobAmount: 0.2 + Math.random() * 0.4,
+			phaseOffset: Math.random() * Math.PI * 2
+		};
+
+		scene.add(block);
+		blocks.push(block);
+	}
+
+	var nebulaCount = 800;
+	var nebulaGeometry = new THREE.BufferGeometry();
+	var nebulaPositions = new Float32Array(nebulaCount * 3);
+	var nebulaColors = new Float32Array(nebulaCount * 3);
+
+	for (var i = 0; i < nebulaCount; i++) {
+		var theta = Math.random() * Math.PI * 2;
+		var phi = Math.acos(2 * Math.random() - 1);
+		var r = Math.random() * 2.5;
+
+		nebulaPositions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+		nebulaPositions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+		nebulaPositions[i * 3 + 2] = r * Math.cos(phi);
+
+		var blue = 0.6 + Math.random() * 0.4;
+		var red = 0.1 + Math.random() * 0.2;
+		var green = 0.2 + Math.random() * 0.3;
+		nebulaColors[i * 3] = red;
+		nebulaColors[i * 3 + 1] = green;
+		nebulaColors[i * 3 + 2] = blue;
+	}
+
+	nebulaGeometry.setAttribute('position', new THREE.BufferAttribute(nebulaPositions, 3));
+	nebulaGeometry.setAttribute('color', new THREE.BufferAttribute(nebulaColors, 3));
+
+	var nebulaMaterial = new THREE.PointsMaterial({
+		size: 0.1,
+		vertexColors: true,
+		transparent: true,
+		opacity: 0.4,
+		blending: THREE.AdditiveBlending,
+		sizeAttenuation: true
+	});
+
+	var nebula = new THREE.Points(nebulaGeometry, nebulaMaterial);
+	scene.add(nebula);
+
+	var ambientLight = new THREE.AmbientLight(0x222244, 0.3);
+	scene.add(ambientLight);
+
+	var centerLight = new THREE.PointLight(0x4466ff, 2, 15);
+	centerLight.position.set(0, 0, 0);
+	scene.add(centerLight);
+
+	var rimLight1 = new THREE.PointLight(0x6644ff, 1, 10);
+	rimLight1.position.set(3, 3, 3);
+	scene.add(rimLight1);
+
+	var rimLight2 = new THREE.PointLight(0x4444ff, 0.8, 10);
+	rimLight2.position.set(-3, -2, 2);
+	scene.add(rimLight2);
+
+	var smokeVertexShader = [
+		'varying vec2 vUv;',
+		'void main() {',
+		'    vUv = uv;',
+		'    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);',
+		'}'
+	].join('\n');
+
+	var smokeFragmentShader = [
+		'uniform float uTime;',
+		'varying vec2 vUv;',
+
+		'float random(vec2 st) {',
+		'    return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);',
+		'}',
+
+		'float noise(vec2 st) {',
+		'    vec2 i = floor(st);',
+		'    vec2 f = fract(st);',
+		'    float a = random(i);',
+		'    float b = random(i + vec2(1.0, 0.0));',
+		'    float c = random(i + vec2(0.0, 1.0));',
+		'    float d = random(i + vec2(1.0, 1.0));',
+		'    vec2 u = f * f * (3.0 - 2.0 * f);',
+		'    return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;',
+		'}',
+
+		'float fbm(vec2 st) {',
+		'    float value = 0.0;',
+		'    float amplitude = 0.5;',
+		'    for (int i = 0; i < 5; i++) {',
+		'        value += amplitude * noise(st);',
+		'        st *= 2.0;',
+		'        amplitude *= 0.5;',
+		'    }',
+		'    return value;',
+		'}',
+
+		'void main() {',
+		'    vec2 uv = vUv - 0.5;',
+		'    float dist = length(uv);',
+		'    ',
+		'    float time = uTime * 0.3;',
+		'    ',
+		'    float smoke = 0.0;',
+		'    for (int i = 0; i < 3; i++) {',
+		'        float fi = float(i);',
+		'        vec2 center = vec2(',
+		'            sin(time * 0.5 + fi * 2.1) * 0.1,',
+		'            cos(time * 0.4 + fi * 1.7) * 0.1',
+		'        );',
+		'        vec2 offset = uv - center;',
+		'        float d = length(offset);',
+		'        ',
+		'        float expand = mod(time + fi * 0.5, 2.0) * 0.6;',
+		'        float ring = smoothstep(expand + 0.3, expand, d) * smoothstep(expand - 0.1, expand, d);',
+		'        ring *= fbm(offset * 8.0 + time * 0.5 + fi * 10.0);',
+		'        smoke += ring * (1.0 - fi * 0.15);',
+		'    }',
+		'    ',
+		'    float centerSmoke = fbm(uv * 6.0 + time * 0.2) * 0.7;',
+		'    centerSmoke *= smoothstep(0.5, 0.0, dist);',
+		'    smoke += centerSmoke;',
+		'    ',
+		'    float edgeFade = 1.0 - smoothstep(0.2, 0.5, dist);',
+		'    smoke *= edgeFade;',
+		'    ',
+		'    vec3 blue = vec3(0.2, 0.4, 0.9);',
+		'    vec3 purple = vec3(0.5, 0.2, 0.8);',
+		'    vec3 color = mix(blue, purple, fbm(uv * 4.0 + time * 0.1));',
+		'    ',
+		'    float alpha = smoke * 0.7;',
+		'    ',
+		'    gl_FragColor = vec4(color, alpha);',
+		'}'
+	].join('\n');
+
+	var smokeUniforms = { uTime: { value: 0 } };
+	var smokeMaterial = new THREE.ShaderMaterial({
+		uniforms: smokeUniforms,
+		vertexShader: smokeVertexShader,
+		fragmentShader: smokeFragmentShader,
+		transparent: true,
+		blending: THREE.AdditiveBlending,
+		depthWrite: false
+	});
+
+	var smokePlane = new THREE.Mesh(
+		new THREE.PlaneGeometry(30, 30),
+		smokeMaterial
+	);
+	smokePlane.position.z = -15;
+	scene.add(smokePlane);
+
+	var flyballGroup = new THREE.Group();
+	scene.add(flyballGroup);
+
+	var flyballSpheres = [];
+	var flyballSphereCount = 4;
+	var trailLength = 15;
+
+	var flyballColors = [
+		{ r: 255, g: 0, b: 0 },
+		{ r: 255, g: 165, b: 0 },
+		{ r: 0, g: 255, b: 0 },
+		{ r: 0, g: 0, b: 255 }
+	];
+
+	function createGlowTexture(color) {
+		var canvas = document.createElement('canvas');
+		canvas.width = 128;
+		canvas.height = 128;
+		var ctx = canvas.getContext('2d');
+
+		var gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+		gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+		gradient.addColorStop(0.3, 'rgba(' + Math.floor(color.r) + ', ' + Math.floor(color.g) + ', ' + Math.floor(color.b) + ', 0.7)');
+		gradient.addColorStop(1, 'transparent');
+
+		ctx.fillStyle = gradient;
+		ctx.fillRect(0, 0, 128, 128);
+
+		var texture = new THREE.CanvasTexture(canvas);
+		return texture;
+	}
+
+	function createTrailTexture(color) {
+		var canvas = document.createElement('canvas');
+		canvas.width = 64;
+		canvas.height = 64;
+		var ctx = canvas.getContext('2d');
+
+		var gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+		gradient.addColorStop(0, 'rgba(' + Math.floor(color.r) + ', ' + Math.floor(color.g) + ', ' + Math.floor(color.b) + ', 0.4)');
+		gradient.addColorStop(0.5, 'rgba(' + Math.floor(color.r) + ', ' + Math.floor(color.g) + ', ' + Math.floor(color.b) + ', 0.12)');
+		gradient.addColorStop(1, 'transparent');
+
+		ctx.fillStyle = gradient;
+		ctx.fillRect(0, 0, 64, 64);
+
+		var texture = new THREE.CanvasTexture(canvas);
+		return texture;
+	}
+
+	for (var i = 0; i < flyballSphereCount; i++) {
+		var color = flyballColors[i];
+		var threeColor = new THREE.Color(color.r / 255, color.g / 255, color.b / 255);
+
+		var glowTexture = createGlowTexture(color);
+		var glowMaterial = new THREE.SpriteMaterial({
+			map: glowTexture,
+			transparent: true,
+			blending: THREE.AdditiveBlending,
+			depthWrite: false
+		});
+		var glowSprite = new THREE.Sprite(glowMaterial);
+		glowSprite.scale.set(0.07, 0.07, 1);
+
+		var innerGlowTexture = createGlowTexture(color);
+		var innerGlowMaterial = new THREE.SpriteMaterial({
+			map: innerGlowTexture,
+			transparent: true,
+			blending: THREE.AdditiveBlending,
+			depthWrite: false,
+			opacity: 0.7
+		});
+		var innerGlowSprite = new THREE.Sprite(innerGlowMaterial);
+		innerGlowSprite.scale.set(0.035, 0.035, 1);
+
+		var coreGeometry = new THREE.SphereGeometry(0.005, 16, 16);
+		var coreMaterial = new THREE.MeshBasicMaterial({
+			color: new THREE.Color(1, 1, 1)
+		});
+		var coreMesh = new THREE.Mesh(coreGeometry, coreMaterial);
+
+		var flyballObject = new THREE.Group();
+		flyballObject.add(glowSprite);
+		flyballObject.add(innerGlowSprite);
+		flyballObject.add(coreMesh);
+
+		var radius = 1.5 + Math.random() * 2;
+		var speed = 0.5 + Math.random() * 0.6;
+		var axisX = (Math.random() - 0.5) * 2;
+		var axisY = (Math.random() - 0.5) * 2;
+		var axisZ = (Math.random() - 0.5) * 2;
+		var axisLen = Math.sqrt(axisX * axisX + axisY * axisY + axisZ * axisZ);
+
+		flyballObject.userData = {
+			radius: radius,
+			speed: speed,
+			theta: Math.random() * Math.PI * 2,
+			phi: Math.random() * Math.PI * 2,
+			axisX: axisX / axisLen,
+			axisY: axisY / axisLen,
+			axisZ: axisZ / axisLen,
+			color: color,
+			threeColor: threeColor,
+			trail: []
+		};
+
+		flyballGroup.add(flyballObject);
+		flyballSpheres.push(flyballObject);
+	}
+
+	var trailSprites = [];
+	for (var i = 0; i < flyballSphereCount; i++) {
+		var color = flyballColors[i];
+		var trailTexture = createTrailTexture(color);
+		var sprites = [];
+		for (var j = 0; j < trailLength; j++) {
+			var material = new THREE.SpriteMaterial({
+				map: trailTexture,
+				transparent: true,
+				blending: THREE.AdditiveBlending,
+				depthWrite: false
+			});
+			var sprite = new THREE.Sprite(material);
+			sprite.visible = false;
+			scene.add(sprite);
+			sprites.push(sprite);
+		}
+		trailSprites.push(sprites);
+	}
+
+	var flyballAngle = 0;
+
+	function rotatePoint(x, y, z, angle, ax, ay, az) {
+		var s = Math.sin(angle / 2);
+		var c = Math.cos(angle / 2);
+		var qx = ax * s;
+		var qy = ay * s;
+		var qz = az * s;
+		var qw = c;
+
+		var x2 = qx * 2, y2 = qy * 2, z2 = qz * 2;
+		var xx = qx * x2, yx = qy * x2, zx = qz * x2;
+		var xy = qx * y2, yy = qy * y2, zy = qz * y2;
+		var xz = qx * z2, yz = qy * z2, zz = qz * z2;
+		var wx = qw * x2, wy = qw * y2, wz = qw * z2;
+
+		return {
+			x: x * (1 - yy - zz) + y * (xy - wz) + z * (xz + wy),
+			y: x * (xy + wz) + y * (1 - xx - zz) + z * (yz - wx),
+			z: x * (xz - wy) + y * (yz + wx) + z * (1 - xx - yy)
+		};
+	}
+
+	var animationTime = 0;
+	var logoOverlay = document.getElementById('logo-overlay');
+	var loginBox = document.getElementById('login-box');
+	var logoOpacity = 0;
+	var logoTargetOpacity = 0;
+
+	function animate() {
+		requestAnimationFrame(animate);
+		animationTime += 0.016;
+
+		if (animationTime > 1.5 && animationTime < 4) {
+			var fadeIn = Math.min(1, (animationTime - 1.5) / 0.5);
+			var fadeOut = Math.max(0, 1 - (animationTime - 3.5) / 0.5);
+			logoTargetOpacity = Math.min(fadeIn, fadeOut);
+		} else {
+			logoTargetOpacity = 0;
+		}
+
+		logoOpacity += (logoTargetOpacity - logoOpacity) * 0.1;
+		logoOverlay.style.opacity = logoOpacity.toString();
+
+		if (animationTime > 4 && !loginBox.classList.contains('visible')) {
+			loginBox.classList.add('visible');
+		}
+
+		for (var i = 0; i < blocks.length; i++) {
+			blocks[i].position.y = blocks[i].userData.baseY;
+		}
+
+		var positions = nebula.geometry.attributes.position.array;
+		for (var i = 0; i < nebulaCount; i++) {
+			positions[i * 3] += Math.sin(animationTime * 0.5 + i) * 0.001;
+			positions[i * 3 + 1] += Math.cos(animationTime * 0.3 + i * 0.5) * 0.001;
+			positions[i * 3 + 2] += Math.sin(animationTime * 0.4 + i * 0.3) * 0.001;
+		}
+		nebula.geometry.attributes.position.needsUpdate = true;
+		nebula.rotation.y += 0.002;
+		nebula.rotation.x += 0.001;
+
+		smokeUniforms.uTime.value += 0.01;
+
+		flyballAngle += 0.002;
+
+		for (var index = 0; index < flyballSpheres.length; index++) {
+			var flyball = flyballSpheres[index];
+			var data = flyball.userData;
+
+			data.theta += data.speed * 0.016;
+
+			var cosTheta = Math.cos(data.theta);
+			var sinTheta = Math.sin(data.theta);
+
+			var px = data.radius * cosTheta;
+			var py = data.radius * sinTheta * 0.6;
+			var pz = data.radius * sinTheta * 0.8;
+
+			var rotated = rotatePoint(px, py, pz, data.phi + flyballAngle * 0.8, data.axisX, data.axisY, data.axisZ);
+
+			flyball.position.set(rotated.x, rotated.y, rotated.z);
+
+			var distToCamera = flyball.position.distanceTo(camera.position);
+			var scaleFactor = Math.max(0.3, Math.min(2, 8 / distToCamera));
+			flyball.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
+			data.trail.unshift({
+				x: rotated.x,
+				y: rotated.y,
+				z: rotated.z,
+				scale: scaleFactor
+			});
+
+			if (data.trail.length > trailLength) {
+				data.trail.pop();
+			}
+
+			var sprites = trailSprites[index];
+			for (var j = 0; j < trailLength; j++) {
+				if (j < data.trail.length) {
+					var point = data.trail[j];
+					var alpha = (1 - j / trailLength) * 0.4;
+					var trailSize = point.scale * (1 - j / trailLength * 0.7) * 0.5;
+
+					sprites[j].position.set(point.x, point.y, point.z);
+					sprites[j].scale.set(trailSize, trailSize, 1);
+					sprites[j].material.opacity = alpha;
+					sprites[j].visible = true;
+				} else {
+					sprites[j].visible = false;
+				}
+			}
+		}
+
+		var startZ = 18;
+		var endZ = 6;
+		var zoomDuration = 4;
+		var cameraRoll = 0;
+		var cameraZ, cameraX, cameraY;
+
+		if (animationTime > zoomDuration) {
+			cameraZ = endZ;
+			cameraX = 0;
+			cameraY = 0;
+			cameraRoll = zoomDuration * 0.08;
+		} else {
+			var t = Math.min(1, animationTime / zoomDuration);
+			var easedT = (t + t * t) / 2;
+			cameraZ = startZ - easedT * (startZ - endZ);
+			cameraX = 0;
+			cameraY = 0;
+			cameraRoll = animationTime * 0.08;
+		}
+
+		camera.position.set(cameraX, cameraY, cameraZ);
+		camera.lookAt(0, 0, 0);
+
+		var localZ = new THREE.Vector3(0, 0, 1);
+		var rollQuaternion = new THREE.Quaternion();
+		rollQuaternion.setFromAxisAngle(localZ, cameraRoll);
+		camera.quaternion.multiply(rollQuaternion);
+
+		renderer.render(scene, camera);
+	}
+
+	var loginShown = false;
+
+	function showLogin() {
+		if (!loginShown) {
+			loginShown = true;
+			loginBox.classList.add('visible');
+		}
+	}
+
+	document.addEventListener('click', showLogin);
+	document.addEventListener('keydown', showLogin);
+
+	window.addEventListener('resize', function() {
+		camera.aspect = window.innerWidth / window.innerHeight;
+		camera.updateProjectionMatrix();
+		renderer.setSize(window.innerWidth, window.innerHeight);
+	});
+
+	animate();
+})();
+
+document.addEventListener('DOMContentLoaded', function() {
+	var pw = document.getElementById('luci_password');
+	if (pw) pw.focus();
+});
+</script>
+</body>
+</html>
