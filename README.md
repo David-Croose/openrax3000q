@@ -40,3 +40,13 @@ make -j$(nproc)
 2. 顶针顶住RESET键开机等待大约10秒（可以开着ping 192.168.1.1看通了就可以放开了）
 3. 浏览器进入192.168.1.1上传固件，升级完成板子重启就完成了（记得电脑设回DHCP）
 ```
+
+## 欢迎光临我的小店
+
+```
+https://item.taobao.com/item.htm?abbucket=8&id=1034826029350&mi_id=0000XnS3ugVKtQFJpLYaypGDrvxcskG77g-WXAa9CnzbFOk&ns=1&priceTId=215046a117783828729697782e1228&spm=a21n57.1.hoverItem.8&utparam=%7B%22aplus_abtest%22%3A%22b336d2fab7c74a39d1b09c341b614dc5%22%7D&xxc=taobaoSearch
+```
+
+<img width="500" height="311" alt="image" src="https://github.com/user-attachments/assets/e1c5a85e-544b-43da-b6e7-d44d2fe33cc1" />
+
+
