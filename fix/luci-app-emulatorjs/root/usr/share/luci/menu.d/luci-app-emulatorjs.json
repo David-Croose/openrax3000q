@@ -1,0 +1,13 @@
+{
+    "admin/services/emulatorjs": {
+        "title": "emulatorjs",
+        "order": 60,
+        "action": {
+            "type": "view",
+            "path": "luci-app-emulatorjs"
+        },
+        "depends": {
+            "acl": ["luci-app-emulatorjs"]
+        }
+    }
+}

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>超级马里奥合集</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1a1a2e;
+            color: #eee;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 {
+            color: #ffd700;
+        }
+        .game-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .game-list {
+            margin: 20px 0;
+        }
+        .game-btn {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+        }
+        .game-btn:hover {
+            background-color: #45a049;
+        }
+        .emulator-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🎮 超级马里奥合集</h1>
+        <div class="game-list">
+            <button class="game-btn" onclick="loadGame('Super Mario Bros (J).nes')">Super Mario Bros 1</button>
+            <button class="game-btn" onclick="loadGame('Super Mario Bros 2 (J).nes')">Super Mario Bros 2</button>
+            <button class="game-btn" onclick="loadGame('Super Mario Bros 3 (J).nes')">Super Mario Bros 3</button>
+        </div>
+        <div class="emulator-container" style='width:640px;height:480px;max-width:100%;margin:0 auto;'>
+            <div id='game'></div>
+        </div>
+    </div>
+
+    <script type='text/javascript'>
+        let currentGame = '';
+        
+        function loadGame(romFile) {
+            currentGame = romFile;
+            // 清除之前的内容
+            document.getElementById('game').innerHTML = '';
+            
+            // 设置开发模式，这样我们就不需要压缩文件了
+            window.EJS_DEBUG_XX = true;
+            
+            EJS_player = '#game';
+            EJS_core = 'nes';
+            EJS_lightgun = false;
+            EJS_biosUrl = '';
+            EJS_gameUrl = 'roms/' + encodeURIComponent(romFile);
+            EJS_gameName = romFile.replace('.nes', '');
+            EJS_pathtodata = 'data/';
+            EJS_disableDatabases = true;
+            
+            // 加载脚本
+            let script = document.createElement('script');
+            script.src = 'data/loader.js';
+            document.body.appendChild(script);
+        }
+        
+        // 默认加载第一个游戏
+        window.onload = function() {
+            loadGame('Super Mario Bros (J).nes');
+        };
+    </script>
+</body>
+</html>

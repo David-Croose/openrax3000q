@@ -1,0 +1,21 @@
+{
+  "luci-app-emulatorjs": {
+    "description": "Grant access to EmulatorJS",
+    "read": {
+      "ubus": {
+        "*": ["*"]
+      },
+      "file": {
+        "*": ["*"]
+      }
+    },
+    "write": {
+      "ubus": {
+        "*": ["*"]
+      },
+      "file": {
+        "*": ["*"]
+      }
+    }
+  }
+}
