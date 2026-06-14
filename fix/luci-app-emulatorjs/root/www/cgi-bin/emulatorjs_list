@@ -1,122 +1,59 @@
 #!/usr/bin/lua
--- EmulatorJS game list CGI v6 (minimal, robust)
--- Reads original UTF-8 game-list.json for display names
--- Scans filesystem for real paths (GBK), matches by ASCII filename
+-- EmulatorJS game list CGI v10 (filesystem-only, structured header)
+-- Scans roms/ directory, assigns sequential IDs, extracts CAT from extension
+-- Output format per entry: @@INF[ID=NNN_CAT=ext]END@@__filename
 
-local function json_quote(s)
-    if type(s) ~= "string" then s = tostring(s) end
-    local escaped = s:gsub('[%z\1-\31\\"]', function(c)
-        local b = string.byte(c)
-        if b == 34 then return '\\"'
-        elseif b == 92 then return '\\\\'
-        elseif b == 10 then return '\\n'
-        elseif b == 13 then return '\\r'
-        elseif b == 9 then return '\\t'
-        else return string.format('\\u%04x', b)
-        end
-    end)
-    return '"' .. escaped .. '"'
-end
-
--- Step 1: Read original UTF-8 game-list.json for display names
-local json_file = io.open("/www/luci-static/emulatorjs/game-list.json")
-local utf8_entries = {}  -- ascii_key -> {name, category, subcategory}
-
-if json_file then
-    local content = json_file:read("*a")
-    json_file:close()
-    for obj in content:gmatch('{[^{}]+}') do
-        local name = obj:match('"name"%s*:%s*"([^"]*)"')
-        local filename = obj:match('"filename"%s*:%s*"([^"]*)"')
-        local path = obj:match('"path"%s*:%s*"([^"]*)"')
-        local cat = obj:match('"category"%s*:%s*"([^"]*)"')
-        local sub = obj:match('"subcategory"%s*:%s*(.-)[},]'):match('"([^"]*)"')
-        if name and filename then
-            local key = filename:gsub("[^\032-\126]", "")
-            utf8_entries[key] = {
-                name = name,
-                filename = filename,
-                category = cat or "unknown",
-                subcategory = sub,
-            }
-        end
-    end
-end
-
--- Step 2: Scan filesystem for real paths
 local base = "/www/luci-static/emulatorjs/roms"
-local fs_map = {}  -- ascii_key -> real_path
+local systems = {"gba", "md", "nes"}
 
-for _, sys in ipairs({"gba", "md", "nes"}) do
-    local pipe = io.popen('find "' .. base .. '/' .. sys .. '" -type f 2>/dev/null')
+-- Collect all files across all systems, sorted by system then path
+local all_files = {}  -- {id, cat, rel_path, filename}
+
+for _, sys in ipairs(systems) do
+    local pipe = io.popen('find "' .. base .. '/' .. sys .. '" -type f 2>/dev/null | sort')
     if pipe then
-        for line in pipe:lines() do
-            local rel = line:sub(#base + 2)
-            local fname = rel:match("([^/]+)$") or rel
-            local key = fname:gsub("[^\032-\126]", "")
-            fs_map[key] = rel
+        for full_path in pipe:lines() do
+            local rel_path = full_path:sub(#base + 2)  -- e.g., "nes/dir/Super Mario.nes"
+            local filename = rel_path:match("([^/]+)$") or rel_path  -- just filename
+            local ext = filename:match("%.(%w+)$") or ""           -- extension without dot
+
+            table.insert(all_files, {
+                id = #all_files + 1,
+                cat = ext,
+                rel_path = rel_path,
+                filename = filename,
+            })
         end
         pipe:close()
     end
 end
 
--- Step 3: Merge and assign IDs
-local result = {}
-local id = 0
-
--- Matched entries (UTF-8 name from JSON + real path from FS)
-for key, entry in pairs(utf8_entries) do
-    if fs_map[key] then
-        id = id + 1
-        table.insert(result, {
-            id = id,
-            name = entry.name,
-            filename = entry.filename,
-            path = fs_map[key],
-            category = entry.category,
-            subcategory = entry.subcategory,
-        })
-        fs_map[key] = nil  -- consumed
-    end
-end
-
--- Unmatched FS entries (fallback: show ASCII filename)
-for key, rel_path in pairs(fs_map) do
-    id = id + 1
-    table.insert(result, {
-        id = id,
-        name = key,
-        filename = key,
-        path = rel_path,
-        category = rel_path:match("^([^/]+)") or "unknown",
-        subcategory = nil,
-    })
-end
-
--- Step 4: Write ID->path mapping for emulatorjs_rom
+-- Write ID->path mapping for emulatorjs_rom
 local mf = io.open("/tmp/emulatorjs_game_map.lua", "w")
 if mf then
     mf:write("local M={\n")
-    for _, g in ipairs(result) do
-        mf:write(string.format("[%d]=%q,\n", g.id, g.path))
+    for _, f in ipairs(all_files) do
+        mf:write(string.format("[%d]=%q,\n", f.id, f.rel_path))
     end
     mf:write("}\nreturn M\n")
     mf:close()
 end
 
--- Step 5: Output JSON
+-- Output JSON array
 io.write("Content-Type: application/json; charset=utf-8\r\n\r\n")
 io.write("[\n")
-for i, g in ipairs(result) do
+for i, f in ipairs(all_files) do
+    -- Build structured header string
+    local header = string.format("@@INF[ID=%03d_CAT=%s]END@@", f.id, f.cat)
+
     io.write(string.format(
-        '{"id":%d,"name":%s,"filename":%s,"category":%s,"subcategory":%s}',
-        g.id,
-        json_quote(g.name),
-        json_quote(g.filename),
-        json_quote(g.category),
-        g.subcategory and json_quote(g.subcategory) or "null"
+        '{"id":%d,"header":"%s","name":"%s","cat":"%s"}',
+        f.id,
+        header,
+        f.filename,   -- raw filesystem filename (may be GBK-encoded)
+        f.cat
     ))
-    if i < #result then io.write(",") end
+    if i < #all_files then io.write(",") end
     io.write("\n")
 end
 io.write("]\n")

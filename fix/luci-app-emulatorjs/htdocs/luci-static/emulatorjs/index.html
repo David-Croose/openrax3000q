@@ -215,20 +215,17 @@
             }
 
             async function loadGameById(gameId) {
-                console.log(`Loading game by ID: ${gameId}`);
+                const gameCat = urlParams.get('cat') || '';
+                const gameName = urlParams.get('name') || 'game';
+                console.log(`Loading game: id=${gameId} cat=${gameCat} name=${gameName}`);
+                window._ejs_gameName = gameName;
+                window._ejs_cat = gameCat;
                 try {
                     const response = await fetch(`/cgi-bin/emulatorjs_rom?id=${gameId}`);
                     if (!response.ok) throw new Error(`HTTP ${response.status}: 无法下载ROM文件`);
                     const blob = await response.blob();
                     if (blob.size === 0) throw new Error('文件为空');
                     const blobUrl = URL.createObjectURL(blob);
-                    // Get display name from list for EJS_gameName
-                    try {
-                        const listResp = await fetch('/cgi-bin/emulatorjs_list');
-                        const games = await listResp.json();
-                        const game = games.find(g => g.id === parseInt(gameId));
-                        window._ejs_gameName = game ? game.filename : 'game';
-                    } catch (_) { window._ejs_gameName = 'game'; }
                     run(false, blobUrl);
                 } catch (err) {
                     document.body.innerHTML = `<div style="color:#fff;padding:20px;text-align:center;">游戏加载失败: ${err.message}<br><br><a href="index.html">返回游戏列表</a></div>`;
@@ -238,8 +235,6 @@
 
             async function loadGameList() {
                 try {
-                    // Use CGI endpoint to dynamically generate game list
-                    // This handles the GBK-vs-UTF-8 encoding mismatch on OpenWRT
                     const response = await fetch('/cgi-bin/emulatorjs_list');
                     if (!response.ok) throw new Error(`HTTP ${response.status}`);
                     const games = await response.json();
@@ -254,54 +249,42 @@
             function displayGameList(games) {
                 const container = document.getElementById('game-list');
                 container.innerHTML = '';
-                
-                // 按分类和子分类分组
+
+                // Group by cat (extension = system type)
                 const grouped = {};
                 games.forEach(game => {
-                    const category = game.category || '其他';
-                    const subcategory = game.subcategory || '无分类';
-                    
-                    if (!grouped[category]) grouped[category] = {};
-                    if (!grouped[category][subcategory]) grouped[category][subcategory] = [];
-                    
-                    grouped[category][subcategory].push(game);
+                    const cat = game.cat || 'unknown';
+                    if (!grouped[cat]) grouped[cat] = [];
+                    grouped[cat].push(game);
                 });
-                
-                // 渲染列表
-                Object.keys(grouped).forEach(category => {
+
+                // Render
+                Object.keys(grouped).sort().forEach(cat => {
                     const categoryDiv = document.createElement('div');
                     categoryDiv.className = 'game-category';
-                    
+
                     const categoryTitle = document.createElement('div');
                     categoryTitle.className = 'game-category-title';
-                    categoryTitle.textContent = getCategoryName(category);
+                    categoryTitle.textContent = getCatName(cat);
                     categoryDiv.appendChild(categoryTitle);
-                    
-                    Object.keys(grouped[category]).forEach(subcategory => {
-                        const subcategoryTitle = document.createElement('div');
-                        subcategoryTitle.className = 'game-subcategory-title';
-                        subcategoryTitle.textContent = subcategory;
-                        categoryDiv.appendChild(subcategoryTitle);
-                        
-                        const gridDiv = document.createElement('div');
-                        gridDiv.className = 'game-grid';
-                        
-                        grouped[category][subcategory].forEach(game => {
-                            const button = document.createElement('button');
-                            button.className = 'game-button';
-                            button.textContent = game.name;
-                            button.onclick = () => startGame(game.id, game.name, game.filename);
-                            gridDiv.appendChild(button);
-                        });
-                        
-                        categoryDiv.appendChild(gridDiv);
+
+                    const gridDiv = document.createElement('div');
+                    gridDiv.className = 'game-grid';
+
+                    grouped[cat].forEach(game => {
+                        const button = document.createElement('button');
+                        button.className = 'game-button';
+                        button.textContent = game.name;
+                        button.onclick = () => startGame(game.id, game.name, game.filename, game.cat);
+                        gridDiv.appendChild(button);
                     });
-                    
+
+                    categoryDiv.appendChild(gridDiv);
                     container.appendChild(categoryDiv);
                 });
             }
 
-            function getCategoryName(category) {
+            function getCatName(cat) {
                 const names = {
                     'nes': '任天堂娱乐系统 (NES)',
                     'snes': '超级任天堂 (SNES)',
@@ -310,21 +293,19 @@
                     'n64': 'Nintendo 64',
                     'md': '世嘉 Genesis / Mega Drive (MD)'
                 };
-                return names[category] || category;
+                return names[cat] || cat;
             }
 
-            function startGame(gameId, gameName, gameFilename) {
-                window.open(`index.html?id=${gameId}`, '_blank');
+            function startGame(gameId, gameName, gameFilename, gameCat) {
+                window.open(`index.html?id=${gameId}&cat=${(gameCat || '').toLowerCase()}&name=${encodeURIComponent(gameName || 'game')}`, '_blank');
             }
 
             async function run(upload, file) {
                 const url = upload ? input.files[0] : file;
-                // 处理文件名：手动上传用原始文件名，blob URL 需要额外处理
                 let filename;
                 if (upload) {
                     filename = input.files[0].name;
                 } else if (file.startsWith('blob:')) {
-                    // Blob URL 无法直接提取文件名，从全局变量获取
                     filename = window._ejs_gameName || 'game';
                 } else {
                     const rawFilename = file.split('/').pop();
@@ -332,35 +313,40 @@
                 }
                 const parts = filename.split(".");
 
+                // Core type: prefer CAT from CGI header, fallback to extension
+                const extFromCat = window._ejs_cat || '';
+                const extFromFile = parts.pop() || '';
+
                 const core = await (async (ext) => {
+                    if (!ext) { /* unknown - show picker */ } else
                     if (["fds", "nes", "unif", "unf"].includes(ext))
                         return "nes"
-
+                    else
                     if (["smc", "fig", "sfc", "gd3", "gd7", "dx2", "bsx", "swc"].includes(ext))
                         return "snes"
-
+                    else
                     if (["z64", "n64"].includes(ext))
                         return "n64"
-
+                    else
                     if (["md", "smd"].includes(ext))
                         return "segaMD"
-
+                    else
                     if (["pce"].includes(ext))
                         return "pce"
-
+                    else
                     if (["ngp", "ngc"].includes(ext))
                         return "ngp"
-
+                    else
                     if (["ws", "wsc"].includes(ext))
                         return "ws"
-
+                    else
                     if (["col", "cv"].includes(ext))
                         return "coleco"
-
+                    else
                     if (["d64"].includes(ext))
                         return "vice_x64sc"
-
-                    if (["nds", "gba", "gb", "z64", "n64"].includes(ext))
+                    else
+                    if (["nds", "gba", "gb"].includes(ext))
                         return ext
 
                     return await new Promise(resolve => {
@@ -422,7 +408,7 @@
                         box.appendChild(select)
                         box.appendChild(button)
                     })
-                })(parts.pop())
+                })(extFromCat || extFromFile)
 
                 const div = document.createElement("div")
                 const sub = document.createElement("div")
