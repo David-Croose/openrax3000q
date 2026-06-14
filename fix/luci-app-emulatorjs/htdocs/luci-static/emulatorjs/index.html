@@ -234,7 +234,7 @@
                             const button = document.createElement('button');
                             button.className = 'game-button';
                             button.textContent = game.name;
-                            button.onclick = () => startGame(game.id, game.name);
+                            button.onclick = () => startGame(game.id, game.name, game.filename);
                             gridDiv.appendChild(button);
                         });
                         
@@ -257,11 +257,11 @@
                 return names[category] || category;
             }
 
-            async function startGame(gameId, gameName) {
+            async function startGame(gameId, gameName, gameFilename) {
                 console.log(`Starting game: id=${gameId} name=${gameName}`);
 
-                // Save game name for display
-                window._ejs_gameName = gameName;
+                // Save game name (with extension) for core detection
+                window._ejs_gameName = gameFilename || gameName;
 
                 console.log(`Fetching ROM via CGI proxy: id=${gameId}`);
 
