@@ -8,13 +8,35 @@
         <style>
              body, html {
                 height: 100%;
-                background-color: transparent;
                 color: white;
             }
 
             body {
                 margin: 0;
                 overflow: hidden;
+            }
+
+            /* Game mode: standalone full-screen page */
+            body.game-mode, html.game-mode {
+                background-color: #000;
+                width: 100vw;
+                height: 100vh;
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+            }
+
+            body.game-mode #display,
+            html.game-mode #display {
+                position: fixed;
+                top: 0; left: 0;
+                width: 100vw !important;
+                height: 100vh !important;
+            }
+
+            /* List mode: embedded in OpenWRT iframe */
+            body.list-mode, html.list-mode {
+                background-color: transparent;
             }
 
             body, #box, #top {
@@ -154,6 +176,15 @@
             let enableThreads = false;
             const queryString = window.location.search;
             const urlParams = new URLSearchParams(queryString);
+
+            // Set mode class based on URL params
+            if (urlParams.get('id') || urlParams.get('rom')) {
+                document.documentElement.classList.add('game-mode');
+                document.body.classList.add('game-mode');
+            } else {
+                document.documentElement.classList.add('list-mode');
+                document.body.classList.add('list-mode');
+            }
             if (parseInt(urlParams.get('debug')) === 1 || urlParams.get('debug') === "true") {
                 enableDebug = true;
                 console.log("Debug is enabled");
@@ -176,8 +207,33 @@
             if (urlParams.get('rom')) {
                 console.log(`Loading ROM from URL: ${urlParams.get('rom')}`);
                 run(false, urlParams.get('rom'));
+            } else if (urlParams.get('id')) {
+                // New page mode: load game by ID from CGI proxy
+                loadGameById(urlParams.get('id'));
             } else {
                 loadGameList();
+            }
+
+            async function loadGameById(gameId) {
+                console.log(`Loading game by ID: ${gameId}`);
+                try {
+                    const response = await fetch(`/cgi-bin/emulatorjs_rom?id=${gameId}`);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}: 无法下载ROM文件`);
+                    const blob = await response.blob();
+                    if (blob.size === 0) throw new Error('文件为空');
+                    const blobUrl = URL.createObjectURL(blob);
+                    // Get display name from list for EJS_gameName
+                    try {
+                        const listResp = await fetch('/cgi-bin/emulatorjs_list');
+                        const games = await listResp.json();
+                        const game = games.find(g => g.id === parseInt(gameId));
+                        window._ejs_gameName = game ? game.filename : 'game';
+                    } catch (_) { window._ejs_gameName = 'game'; }
+                    run(false, blobUrl);
+                } catch (err) {
+                    document.body.innerHTML = `<div style="color:#fff;padding:20px;text-align:center;">游戏加载失败: ${err.message}<br><br><a href="index.html">返回游戏列表</a></div>`;
+                    console.error(err);
+                }
             }
 
             async function loadGameList() {
@@ -257,36 +313,8 @@
                 return names[category] || category;
             }
 
-            async function startGame(gameId, gameName, gameFilename) {
-                console.log(`Starting game: id=${gameId} name=${gameName}`);
-
-                // Save game name (with extension) for core detection
-                window._ejs_gameName = gameFilename || gameName;
-
-                console.log(`Fetching ROM via CGI proxy: id=${gameId}`);
-
-                try {
-                    // Use ID-based fetch (pure ASCII URL, avoids uHTTPd crash on non-ASCII)
-                    const response = await fetch(`/cgi-bin/emulatorjs_rom?id=${gameId}`);
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: 无法下载ROM文件`);
-                    }
-                    const contentType = response.headers.get('content-type') || '';
-                    if (contentType.includes('text') && !contentType.includes('octet')) {
-                        const text = await response.text();
-                        throw new Error(text.trim() || '服务器返回错误');
-                    }
-                    const blob = await response.blob();
-                    if (blob.size === 0) {
-                        throw new Error('文件为空');
-                    }
-                    const blobUrl = URL.createObjectURL(blob);
-                    console.log(`ROM fetched successfully, size: ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
-                    run(false, blobUrl);
-                } catch (err) {
-                    console.error('加载ROM失败:', err);
-                    alert(`游戏加载失败: ${err.message}\n\n请检查:\n1. ROM文件是否存在于 roms/ 目录\n2. CGI代理脚本 /cgi-bin/emulatorjs_rom 是否已部署`);
-                }
+            function startGame(gameId, gameName, gameFilename) {
+                window.open(`index.html?id=${gameId}`, '_blank');
             }
 
             async function run(upload, file) {
