@@ -182,13 +182,16 @@
 
             async function loadGameList() {
                 try {
-                    const response = await fetch('game-list.json');
+                    // Use CGI endpoint to dynamically generate game list
+                    // This handles the GBK-vs-UTF-8 encoding mismatch on OpenWRT
+                    const response = await fetch('/cgi-bin/emulatorjs_list');
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
                     const games = await response.json();
                     displayGameList(games);
                 } catch (error) {
                     console.error('加载游戏列表失败:', error);
-                    document.getElementById('game-list').innerHTML = 
-                        '<p style="color: red;">加载游戏列表失败，请检查 game-list.json 文件是否存在。</p>';
+                    document.getElementById('game-list').innerHTML =
+                        '<p style="color: red;">加载游戏列表失败</p><p>请检查 CGI 脚本 /cgi-bin/emulatorjs_list 是否已部署</p>';
                 }
             }
 
@@ -231,7 +234,7 @@
                             const button = document.createElement('button');
                             button.className = 'game-button';
                             button.textContent = game.name;
-                            button.onclick = () => startGame(game.path);
+                            button.onclick = () => startGame(game.id, game.name);
                             gridDiv.appendChild(button);
                         });
                         
@@ -254,13 +257,51 @@
                 return names[category] || category;
             }
 
-            function startGame(gamePath) {
-                window.open(`index.html?rom=${encodeURIComponent(gamePath)}`, '_blank');
+            async function startGame(gameId, gameName) {
+                console.log(`Starting game: id=${gameId} name=${gameName}`);
+
+                // Save game name for display
+                window._ejs_gameName = gameName;
+
+                console.log(`Fetching ROM via CGI proxy: id=${gameId}`);
+
+                try {
+                    // Use ID-based fetch (pure ASCII URL, avoids uHTTPd crash on non-ASCII)
+                    const response = await fetch(`/cgi-bin/emulatorjs_rom?id=${gameId}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: 无法下载ROM文件`);
+                    }
+                    const contentType = response.headers.get('content-type') || '';
+                    if (contentType.includes('text') && !contentType.includes('octet')) {
+                        const text = await response.text();
+                        throw new Error(text.trim() || '服务器返回错误');
+                    }
+                    const blob = await response.blob();
+                    if (blob.size === 0) {
+                        throw new Error('文件为空');
+                    }
+                    const blobUrl = URL.createObjectURL(blob);
+                    console.log(`ROM fetched successfully, size: ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
+                    run(false, blobUrl);
+                } catch (err) {
+                    console.error('加载ROM失败:', err);
+                    alert(`游戏加载失败: ${err.message}\n\n请检查:\n1. ROM文件是否存在于 roms/ 目录\n2. CGI代理脚本 /cgi-bin/emulatorjs_rom 是否已部署`);
+                }
             }
 
             async function run(upload, file) {
                 const url = upload ? input.files[0] : file;
-                const filename = upload ? input.files[0].name : file.split('/').pop();
+                // 处理文件名：手动上传用原始文件名，blob URL 需要额外处理
+                let filename;
+                if (upload) {
+                    filename = input.files[0].name;
+                } else if (file.startsWith('blob:')) {
+                    // Blob URL 无法直接提取文件名，从全局变量获取
+                    filename = window._ejs_gameName || 'game';
+                } else {
+                    const rawFilename = file.split('/').pop();
+                    filename = decodeURIComponent(rawFilename);
+                }
                 const parts = filename.split(".");
 
                 const core = await (async (ext) => {
@@ -368,6 +409,13 @@
                 div.appendChild(sub)
                 document.body.appendChild(div)
 
+                // 添加加载状态提示
+                const loadingDiv = document.createElement('div');
+                loadingDiv.id = 'loading-status';
+                loadingDiv.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; font-size: 18px; z-index: 1000; text-align: center;';
+                loadingDiv.innerHTML = '<div style="font-size: 40px; margin-bottom: 15px;">🎮</div><div>正在加载游戏...</div><div style="font-size: 14px; color: #888; margin-top: 10px;">请稍候，首次加载可能需要下载模拟器核心</div>';
+                document.body.appendChild(loadingDiv);
+
                 window.EJS_player = "#game";
                 window.EJS_gameName = parts.shift();
                 window.EJS_biosUrl = "";
@@ -379,7 +427,32 @@
                 window.EJS_disableDatabases = true;
                 window.EJS_threads = enableThreads;
 
+                // 添加网络错误监听
+                window.addEventListener('error', function(e) {
+                    if (e.message && e.message.toLowerCase().includes('network')) {
+                        console.error('检测到网络错误:', e);
+                        const loadingStatus = document.getElementById('loading-status');
+                        if (loadingStatus) {
+                            loadingStatus.innerHTML = `<div style="color: #ff4444;">❌ 加载失败</div><div style="font-size: 14px; margin-top: 15px;">无法下载ROM文件，请检查：</div><ul style="text-align: left; display: inline-block; margin-top: 10px;"><li>文件路径是否正确</li><li>文件名是否包含特殊字符</li><li>服务器权限设置</li></ul><button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; cursor: pointer;">返回游戏列表</button>`;
+                        }
+                    }
+                }, true);
+
                 script.src = "data/loader.js";
+                script.onload = function() {
+                    // 移除加载提示
+                    const loadingStatus = document.getElementById('loading-status');
+                    if (loadingStatus) {
+                        loadingStatus.remove();
+                    }
+                };
+                script.onerror = function() {
+                    console.error('无法加载 EmulatorJS 核心文件');
+                    const loadingStatus = document.getElementById('loading-status');
+                    if (loadingStatus) {
+                        loadingStatus.innerHTML = '<div style="color: #ff4444;">❌ 加载失败</div><div style="font-size: 14px; margin-top: 15px;">无法加载模拟器核心文件</div><button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; cursor: pointer;">返回游戏列表</button>';
+                    }
+                };
                 document.body.appendChild(script);
             }
             

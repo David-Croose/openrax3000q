@@ -1,0 +1,81 @@
+#!/usr/bin/lua
+-- EmulatorJS game list CGI v4
+-- Returns index-based IDs for URL-safe access
+-- Each game gets a numeric ID; ROM is fetched by ID via POST
+
+local function json_quote(s)
+    if type(s) ~= "string" then s = tostring(s) end
+    local escaped = s:gsub('[%z\1-\31\\"]', function(c)
+        local b = string.byte(c)
+        if b == 34 then return '\\"'
+        elseif b == 92 then return '\\\\'
+        elseif b == 10 then return '\\n'
+        elseif b == 13 then return '\\r'
+        elseif b == 9 then return '\\t'
+        else return string.format('\\u%04x', b)
+        end
+    end)
+    return '"' .. escaped .. '"'
+end
+
+local base = "/www/luci-static/emulatorjs/roms"
+local games = {}
+local id = 0
+
+for _, system in ipairs({"gba", "md", "nes"}) do
+    local sys_dir = base .. "/" .. system
+    local pipe = io.popen('find "' .. sys_dir .. '" -type f 2>/dev/null')
+    if pipe then
+        for raw_path in pipe:lines() do
+            id = id + 1
+            local rel_path = raw_path:sub(#base + 2) or ""
+            local filename = rel_path:match("([^/]+)$") or rel_path
+
+            -- Extract subdirectory if exists
+            local subdir = nil
+            local dir_part = rel_path:match("^(.+)/[^/]+$")
+            if dir_part and dir_part:find("/") then
+                subdir = dir_part:match("([^/]+)$")
+            end
+
+            table.insert(games, {
+                id = id,
+                name = filename,
+                path = rel_path,
+                category = system,
+                subcategory = subdir,
+            })
+        end
+        pipe:close()
+    end
+end
+
+-- Save ID-to-path mapping to temp file for the ROM CGI to read
+local map_file = io.open("/tmp/emulatorjs_game_map.lua", "w")
+if map_file then
+    map_file:write("-- Auto-generated game ID to path mapping\n")
+    map_file:write("local M = {\n")
+    for _, g in ipairs(games) do
+        -- Write path as Lua string literal with raw bytes
+        local escaped_path = g.path:gsub("\\", "\\\\"):gsub('"', '\\"'):gsub("\n", "\\n"):gsub("\r", "\\r")
+        map_file:write(string.format("  [%d] = %q,\n", g.id, g.path))
+    end
+    map_file:write("}\nreturn M\n")
+    map_file:close()
+end
+
+io.write("Content-Type: application/json; charset=utf-8\r\n\r\n")
+io.write("[\n")
+for i, g in ipairs(games) do
+    io.write(string.format(
+        '  {"id":%d,"name":%s,"path":%s,"category":%s,"subcategory":%s}',
+        g.id,
+        json_quote(g.name),
+        json_quote(g.path),       -- Display only (not used for fetch)
+        json_quote(g.category),
+        g.subcategory and json_quote(g.subcategory) or "null"
+    ))
+    if i < #games then io.write(",") end
+    io.write("\n")
+end
+io.write("]\n")
