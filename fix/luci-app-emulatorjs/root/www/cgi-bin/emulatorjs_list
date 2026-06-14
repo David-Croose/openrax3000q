@@ -1,7 +1,7 @@
 #!/usr/bin/lua
--- EmulatorJS game list CGI v4
--- Returns index-based IDs for URL-safe access
--- Each game gets a numeric ID; ROM is fetched by ID via POST
+-- EmulatorJS game list CGI v5 (UTF-8 display names)
+-- Reads original UTF-8 game-list.json for display, scans filesystem for real paths
+-- Matches entries by ASCII filename to bridge the GBK-vs-UTF-8 gap
 
 local function json_quote(s)
     if type(s) ~= "string" then s = tostring(s) end
@@ -18,64 +18,114 @@ local function json_quote(s)
     return '"' .. escaped .. '"'
 end
 
+-- Read original UTF-8 game-list.json for display names
+local json_file = io.open("/www/luci-static/emulatorjs/game-list.json")
+local utf8_games = {}
+if json_file then
+    local json_str = json_file:read("*a")
+    json_file:close()
+    -- Simple JSON parser: extract objects
+    for obj_str in json_str:gmatch('{[^{}]+}') do
+        local name = obj_str:match('"name"%s*:%s*"([^"]*)"')
+        local filename = obj_str:match('"filename"%s*:%s*"([^"]*)"')
+        local path = obj_str:match('"path"%s*:%s*"([^"]*)"')
+        local category = obj_str:match('"category"%s*:%s*"([^"]*)"')
+        local subcategory = obj_str:match('"subcategory"%s*:%s*(.-)[},]'):match('"([^"]*)"')
+        if name and path then
+            -- Extract ASCII-safe key from filename for matching
+            local ascii_key = filename:gsub("[^\032-\126]", "")
+            utf8_games[ascii_key] = {
+                name = name,
+                filename = filename,
+                path = path,
+                category = category or "unknown",
+                subcategory = subcategory,
+            }
+        end
+    end
+end
+
+print("Loaded " .. #utf8_games .. " entries from UTF-8 JSON", io.stderr)
+
+-- Scan filesystem for real paths (GBK encoded)
 local base = "/www/luci-static/emulatorjs/roms"
-local games = {}
-local id = 0
+local fs_entries = {}  -- ascii_key -> real_path
 
 for _, system in ipairs({"gba", "md", "nes"}) do
     local sys_dir = base .. "/" .. system
     local pipe = io.popen('find "' .. sys_dir .. '" -type f 2>/dev/null')
     if pipe then
         for raw_path in pipe:lines() do
-            id = id + 1
             local rel_path = raw_path:sub(#base + 2) or ""
             local filename = rel_path:match("([^/]+)$") or rel_path
-
-            -- Extract subdirectory if exists
-            local subdir = nil
-            local dir_part = rel_path:match("^(.+)/[^/]+$")
-            if dir_part and dir_part:find("/") then
-                subdir = dir_part:match("([^/]+)$")
-            end
-
-            table.insert(games, {
-                id = id,
-                name = filename,
-                path = rel_path,
-                category = system,
-                subcategory = subdir,
-            })
+            -- Create ASCII-only key for matching
+            local ascii_key = filename:gsub("[^\032-\126]", "")
+            fs_entries[ascii_key] = rel_path
         end
         pipe:close()
     end
 end
 
--- Save ID-to-path mapping to temp file for the ROM CGI to read
+-- Build output: merge UTF-8 names with filesystem paths, assign IDs
+local output = {}
+local id = 0
+
+-- First: add all entries from original JSON that exist on filesystem
+for ascii_key, entry in pairs(utf8_games) do
+    if fs_entries[ascii_key] then
+        id = id + 1
+        table.insert(output, {
+            id = id,
+            name = entry.name,
+            filename = entry.filename,
+            path = fs_entries[ascii_key],  -- Real filesystem path (GBK)
+            category = entry.category,
+            subcategory = entry.subcategory,
+        })
+        -- Remove from fs_entries so we don't duplicate
+        fs_entries[ascii_key] = nil
+    end
+end
+
+-- Then: add any filesystem entries not in original JSON
+for ascii_key, real_path in pairs(fs_entries) do
+    id = id + 1
+    table.insert(output, {
+        id = id,
+        name = ascii_key,  -- Fallback: show ASCII filename
+        filename = ascii_key,
+        path = real_path,
+        category = real_path:match("^([^/]+)") or "unknown",
+        subcategory = nil,
+    })
+end
+
+-- Save ID-to-path mapping for emulatorjs_rom CGI
 local map_file = io.open("/tmp/emulatorjs_game_map.lua", "w")
 if map_file then
     map_file:write("-- Auto-generated game ID to path mapping\n")
     map_file:write("local M = {\n")
-    for _, g in ipairs(games) do
-        -- Write path as Lua string literal with raw bytes
-        local escaped_path = g.path:gsub("\\", "\\\\"):gsub('"', '\\"'):gsub("\n", "\\n"):gsub("\r", "\\r")
+    for _, g in ipairs(output) do
         map_file:write(string.format("  [%d] = %q,\n", g.id, g.path))
     end
     map_file:write("}\nreturn M\n")
     map_file:close()
 end
 
+-- Output JSON with UTF-8 display names
 io.write("Content-Type: application/json; charset=utf-8\r\n\r\n")
 io.write("[\n")
-for i, g in ipairs(games) do
+for i, g in ipairs(output) do
     io.write(string.format(
-        '  {"id":%d,"name":%s,"path":%s,"category":%s,"subcategory":%s}',
+        '  {"id":%d,"name":%s,"filename":%s,"path":%s,"category":%s,"subcategory":%s}',
         g.id,
         json_quote(g.name),
-        json_quote(g.path),       -- Display only (not used for fetch)
+        json_quote(g.filename),
+        json_quote(g.path),
         json_quote(g.category),
         g.subcategory and json_quote(g.subcategory) or "null"
     ))
-    if i < #games then io.write(",") end
+    if i < #output then io.write(",") end
     io.write("\n")
 end
 io.write("]\n")
