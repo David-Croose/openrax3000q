@@ -59,7 +59,7 @@ if id_param then
         os.exit(0)
     end
 
-    local base = "/www/luci-static/emulatorjs"
+    local base = "/www/luci-static/emulatorjs/roms"
 
     -- Try 1: Direct path from mapping
     local full_path = base .. "/" .. rel_path
@@ -122,7 +122,7 @@ if path_param then
         io.write("Content-Type: text/plain\r\n\r\nError: empty filename")
         os.exit(0)
     end
-    local base = "/www/luci-static/emulatorjs"
+    local base = "/www/luci-static/emulatorjs/roms"
     local ext = decoded:match("%.(%w+)$") or ""
     local system = decoded:match("^([^/]+)") or ""
 
