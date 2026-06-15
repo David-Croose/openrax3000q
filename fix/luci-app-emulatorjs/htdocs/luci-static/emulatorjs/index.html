@@ -234,6 +234,9 @@
                 console.log(`Loading game: id=${gameId} cat=${gameCat} name=${gameName}`);
                 window._ejs_gameName = gameName;
                 window._ejs_cat = gameCat;
+
+                // Show game name in browser tab title
+                document.title = decodeURIComponent(gameName);
                 try {
                     const response = await fetch(`/cgi-bin/emulatorjs_rom?id=${gameId}`);
                     if (!response.ok) throw new Error(`HTTP ${response.status}: 无法下载ROM文件`);
