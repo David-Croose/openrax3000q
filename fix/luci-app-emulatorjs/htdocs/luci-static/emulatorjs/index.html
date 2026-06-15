@@ -214,6 +214,20 @@
                 loadGameList();
             }
 
+            // GBK decoder: Base64 string -> UTF-8 string
+            // Uses native TextDecoder('gbk') available in modern browsers
+            function gbkDecode(b64str) {
+                try {
+                    const latin1 = atob(b64str);  // Base64 → Latin1 (each char = 1 byte)
+                    const bytes = new Uint8Array(latin1.length);
+                    for (let i = 0; i < latin1.length; i++) bytes[i] = latin1.charCodeAt(i);
+                    return new TextDecoder('gbk').decode(bytes);
+                } catch (e) {
+                    console.warn('GBK decode failed:', e);
+                    return atob(b64str);  // fallback: raw Latin1
+                }
+            }
+
             async function loadGameById(gameId) {
                 const gameCat = urlParams.get('cat') || '';
                 const gameName = urlParams.get('name') || 'game';
@@ -274,8 +288,9 @@
                     grouped[cat].forEach(game => {
                         const button = document.createElement('button');
                         button.className = 'game-button';
-                        button.textContent = game.name;
-                        button.onclick = () => startGame(game.id, game.name, game.filename, game.cat);
+                        const displayName = game.name_b64 ? gbkDecode(game.name_b64) : (game.name || 'game');
+                        button.textContent = displayName;
+                        button.onclick = () => startGame(game.id, displayName, displayName, game.cat);
                         gridDiv.appendChild(button);
                     });
 

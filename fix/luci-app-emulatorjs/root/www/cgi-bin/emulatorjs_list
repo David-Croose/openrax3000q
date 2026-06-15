@@ -1,27 +1,53 @@
 #!/usr/bin/lua
--- EmulatorJS game list CGI v10 (filesystem-only, structured header)
+-- EmulatorJS game list CGI v11 (filesystem-only + Base64 GBK-safe names)
 -- Scans roms/ directory, assigns sequential IDs, extracts CAT from extension
--- Output format per entry: @@INF[ID=NNN_CAT=ext]END@@__filename
+-- Filenames are Base64-encoded for safe JSON transport of GBK bytes
 
 local base = "/www/luci-static/emulatorjs/roms"
 local systems = {"gba", "md", "nes"}
 
+-- Pure Lua Base64 encoding (Lua 5.1 compatible - no bitwise operators)
+local b64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+local function b64encode(str)
+    local result = {}
+    local i = 1
+    while i <= #str do
+        local a, b, c = str:byte(i, i) or 0, str:byte(i + 1) or 0, str:byte(i + 2) or 0
+        local n = a * 65536 + b * 256 + c
+        table.insert(result, b64chars:sub(math.floor(n / 262144) % 64 + 1, math.floor(n / 262144) % 64 + 1))
+        table.insert(result, b64chars:sub(math.floor(n / 4096) % 64 + 1, math.floor(n / 4096) % 64 + 1))
+        if i + 1 <= #str then
+            table.insert(result, b64chars:sub(math.floor(n / 64) % 64 + 1, math.floor(n / 64) % 64 + 1))
+        else
+            table.insert(result, "=")
+        end
+        if i + 2 <= #str then
+            table.insert(result, b64chars:sub(n % 64 + 1, n % 64 + 1))
+        else
+            table.insert(result, "=")
+        end
+        i = i + 3
+    end
+    return table.concat(result)
+end
+
 -- Collect all files across all systems, sorted by system then path
-local all_files = {}  -- {id, cat, rel_path, filename}
+local all_files = {}
 
 for _, sys in ipairs(systems) do
     local pipe = io.popen('find "' .. base .. '/' .. sys .. '" -type f 2>/dev/null | sort')
     if pipe then
         for full_path in pipe:lines() do
-            local rel_path = full_path:sub(#base + 2)  -- e.g., "nes/dir/Super Mario.nes"
-            local filename = rel_path:match("([^/]+)$") or rel_path  -- just filename
-            local ext = filename:match("%.(%w+)$") or ""           -- extension without dot
+            local rel_path = full_path:sub(#base + 2)
+            local filename = rel_path:match("([^/]+)$") or rel_path
+            local ext = filename:match("%.(%w+)$") or ""
 
             table.insert(all_files, {
                 id = #all_files + 1,
-                cat = ext,
+                cat = ext:lower(),
                 rel_path = rel_path,
                 filename = filename,
+                name_b64 = b64encode(filename),
             })
         end
         pipe:close()
@@ -39,18 +65,14 @@ if mf then
     mf:close()
 end
 
--- Output JSON array
+-- Output JSON array with Base64-encoded names
 io.write("Content-Type: application/json; charset=utf-8\r\n\r\n")
 io.write("[\n")
 for i, f in ipairs(all_files) do
-    -- Build structured header string
-    local header = string.format("@@INF[ID=%03d_CAT=%s]END@@", f.id, f.cat)
-
     io.write(string.format(
-        '{"id":%d,"header":"%s","name":"%s","cat":"%s"}',
+        '{"id":%d,"name_b64":"%s","cat":"%s"}',
         f.id,
-        header,
-        f.filename,   -- raw filesystem filename (may be GBK-encoded)
+        f.name_b64,
         f.cat
     ))
     if i < #all_files then io.write(",") end
