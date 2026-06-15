@@ -328,7 +328,7 @@
                 }
                 const parts = filename.split(".");
 
-                // Core type: prefer CAT from CGI header, fallback to extension
+                // Core type: prefer CAT from URL param, fallback to extension
                 const extFromCat = window._ejs_cat || '';
                 const extFromFile = parts.pop() || '';
 
