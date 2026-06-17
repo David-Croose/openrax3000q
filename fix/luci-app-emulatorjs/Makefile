@@ -11,4 +11,11 @@ LUCI_PKGARCH:=all
 
 include $(TOPDIR)/feeds/luci/luci.mk
 
+# Ensure CGI scripts have executable permission after install
+define Package/$(PKG_NAME)/postinst
+#!/bin/sh
+chmod 755 /www/cgi-bin/emulatorjs_list /www/cgi-bin/emulatorjs_rom 2>/dev/null
+exit 0
+endef
+
 # call BuildPackage - OpenWrt buildroot signature
