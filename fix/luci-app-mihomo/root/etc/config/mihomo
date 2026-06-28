@@ -1,13 +1,11 @@
 
 config mihomo 'main'
-	option subscribe_url ''
 	option log_level 'info'
 	option ipv6 '0'
 	option allow_lan '1'
 	option mixed_port '7890'
 	option redir_port '7892'
 	option tproxy_port '7893'
-	option enabled '1'
 	option mode 'Rule'
-	option selected_node '🇹🇭 [三网]TH 02'
+	option enabled '0'
 

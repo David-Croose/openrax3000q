@@ -19,7 +19,8 @@ var callSetNode = rpc.declare({
 
 var callUpdateSubscription = rpc.declare({
     object: 'luci-app-mihomo',
-    method: 'updateSubscription'
+    method: 'updateSubscription',
+    params: ['subscribe_url']
 });
 
 function formatBytes(bytes) {
@@ -69,9 +70,48 @@ return view.extend({
         o.inputtitle = _('Update Now');
         o.inputstyle = 'action';
         o.onclick = function(ev, section_id) {
-            return callUpdateSubscription().then(function(res) {
+            var self = this;
+            var urlOpt = self.section.getOption('subscribe_url');
+            var url = urlOpt ? urlOpt.formvalue(section_id) : '';
+            if (!url || url === '') {
+                alert(_('Please enter a subscription URL first'));
+                return Promise.reject(new Error('No URL'));
+            }
+
+            return callUpdateSubscription(url).then(function(res) {
                 if (res && res.result === 'ok') {
-                    window.location.reload();
+                    return callGetStatus().then(function(newData) {
+                        var nodeOpt = self.section.getOption('selected_node');
+                        if (nodeOpt) {
+                            var nodeElem = nodeOpt.getUIElement(section_id);
+                            if (nodeElem && nodeElem.node) {
+                                var selectEl = nodeElem.node.querySelector('select');
+                                if (selectEl) {
+                                    selectEl.innerHTML = '';
+                                    if (newData.all_nodes && newData.all_nodes.length) {
+                                        newData.all_nodes.forEach(function(node) {
+                                            var opt = document.createElement('option');
+                                            opt.value = node;
+                                            opt.textContent = node;
+                                            selectEl.appendChild(opt);
+                                        });
+                                    }
+                                    var currentVal = newData.proxy_node || '';
+                                    if (currentVal && (!newData.all_nodes || newData.all_nodes.indexOf(currentVal) === -1)) {
+                                        var opt = document.createElement('option');
+                                        opt.value = currentVal;
+                                        opt.textContent = currentVal;
+                                        selectEl.appendChild(opt);
+                                    }
+                                    selectEl.value = currentVal || '';
+                                    uci.set('mihomo', section_id, 'selected_node', currentVal);
+                                }
+                            }
+                        }
+                        alert(_('Subscription updated successfully'));
+                    }).catch(function(err) {
+                        alert(_('Subscription updated, but failed to refresh node list') + ': ' + (err.message || String(err)));
+                    });
                 } else {
                     var msg = (res && res.message) ? res.message : JSON.stringify(res);
                     alert(_('Update failed') + ': ' + msg);
@@ -141,14 +181,6 @@ return view.extend({
             var usedStr = formatBytes(used);
             var totalStr = total ? formatBytes(total) : _('Unknown');
             return usedStr + ' / ' + totalStr;
-        };
-
-        o = s.option(form.DummyValue, '_sub_info', _('Subscription Info'));
-        o.cfgvalue = function() {
-            if (data.info_lines && data.info_lines.length) {
-                return data.info_lines.join('  |  ');
-            }
-            return '';
         };
 
         o = s.option(form.ListValue, 'mode', _('Proxy Mode'), _('Global forces all traffic through proxy; Rule uses rule-based routing.'));

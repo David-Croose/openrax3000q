@@ -108,6 +108,10 @@ EOF
 
     (
         sleep 3
+        config_load mihomo
+        config_get_bool enabled "main" "enabled" 0
+        [ "$enabled" -eq 1 ] || exit 0
+        pgrep mihomo >/dev/null 2>&1 || exit 0
         [ -x "$FW_SCRIPT" ] && "$FW_SCRIPT" start
     ) &
 }
