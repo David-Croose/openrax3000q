@@ -1,0 +1,65 @@
+#!/bin/sh
+
+get_status() {
+    local proxy_node="Unknown"
+    local online="false"
+    local upload="0"
+    local download="0"
+    local total="0"
+    local expire="0"
+    local all_nodes_json="[]"
+
+    local proxy_info=$(curl -s --connect-timeout 3 http://127.0.0.1:9090/proxies/Proxies 2>/dev/null)
+    if [ -n "$proxy_info" ]; then
+        proxy_node=$(echo "$proxy_info" | jsonfilter -e '@.now' 2>/dev/null || echo "Unknown")
+        local alive=$(echo "$proxy_info" | jsonfilter -e '@.alive' 2>/dev/null || echo "false")
+        [ "$alive" = "true" ] && online="true"
+
+        all_nodes_json="["
+        while IFS= read -r node; do
+            all_nodes_json="$all_nodes_json\"$node\","
+        done <<EOF
+$(echo "$proxy_info" | jsonfilter -e '@.all[*]' 2>/dev/null)
+EOF
+        all_nodes_json="${all_nodes_json%,}]"
+    fi
+
+    local sub_url=$(uci get mihomo.main.subscribe_url 2>/dev/null)
+    if [ -n "$sub_url" ]; then
+        local sub_info=$(curl -sI --connect-timeout 5 -L -H "User-Agent: ClashMetaForAndroid/2.8.9" "$sub_url" 2>/dev/null | grep -i "subscription-userinfo" | sed 's/.*: //')
+        if [ -n "$sub_info" ]; then
+            upload=$(echo "$sub_info" | grep -o 'upload=[0-9]*' | cut -d= -f2)
+            download=$(echo "$sub_info" | grep -o 'download=[0-9]*' | cut -d= -f2)
+            total=$(echo "$sub_info" | grep -o 'total=[0-9]*' | cut -d= -f2)
+            expire=$(echo "$sub_info" | grep -o 'expire=[0-9]*' | cut -d= -f2)
+        fi
+    fi
+
+    printf '{"proxy_node":"%s","online":%s,"upload":"%s","download":"%s","total":"%s","expire":"%s","all_nodes":%s}' "$proxy_node" "$online" "$upload" "$download" "$total" "$expire" "$all_nodes_json"
+}
+
+set_node() {
+    local name="$1"
+    if [ -n "$name" ]; then
+        curl -s -X PUT -H "Content-Type: application/json" -d "{\"name\":\"$name\"}" http://127.0.0.1:9090/proxies/Proxies >/dev/null 2>&1
+    fi
+    echo '{"result":"ok"}'
+}
+
+case "$1" in
+    list)
+        echo '{"getStatus":{},"setNode":{"name":"String"}}'
+        ;;
+    call)
+        case "$2" in
+            getStatus)
+                get_status
+                ;;
+            setNode)
+                read -r input
+                local name=$(echo "$input" | jsonfilter -e '$.name' 2>/dev/null)
+                set_node "$name"
+                ;;
+        esac
+        ;;
+esac

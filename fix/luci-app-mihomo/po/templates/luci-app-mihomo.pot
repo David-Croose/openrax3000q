@@ -1,0 +1,139 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:51
+msgid "Mihomo Proxy"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:51
+msgid "Transparent proxy based on mihomo (Clash Meta)."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:55
+msgid "Enable Mihomo"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:55
+msgid "Start mihomo proxy and iptables rules on boot."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:58
+msgid "Subscription URL"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:58
+msgid "Clash subscription link for updating proxy nodes."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:62
+msgid "Current Node"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:75
+msgid "Unknown"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:95
+msgid "Switched"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:105
+msgid "Expire Time"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:114
+msgid "Traffic"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:124
+msgid "Proxy Mode"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:124
+msgid "Global forces all traffic through proxy; Rule uses rule-based routing."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:125
+msgid "Rule"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:126
+msgid "Global"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:127
+msgid "Direct"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:130
+msgid "Log Level"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:131
+msgid "Info"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:132
+msgid "Debug"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:133
+msgid "Warning"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:134
+msgid "Error"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:135
+msgid "Silent"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:138
+msgid "IPv6"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:138
+msgid "Enable IPv6 proxy support."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:141
+msgid "Allow LAN"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:141
+msgid "Allow other devices in the LAN to use this proxy."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:144
+msgid "Mixed Port"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:144
+msgid "HTTP/SOCKS mixed proxy port (default 7890)."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:148
+msgid "Redir Port"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:148
+msgid "Transparent redirect port (default 7892)."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:152
+msgid "TProxy Port"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:152
+msgid "TProxy port (default 7893)."
+msgstr ""
+
+#: root/usr/share/luci/menu.d/luci-app-mihomo.json:3
+msgid "Mihomo"
+msgstr ""
+
+#: root/usr/share/rpcd/acl.d/luci-app-mihomo.json:3
+msgid "Grant access to LuCI app mihomo"
+msgstr ""

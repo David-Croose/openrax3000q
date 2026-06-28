@@ -1,0 +1,13 @@
+payload:
+  # Proxies_1
+  # #steam社区
+  - DOMAIN-SUFFIX,steamcommunity.com
+  - DOMAIN-SUFFIX,steampowered.com
+  - DOMAIN-SUFFIX,steamstatic.com
+  # #BigmeWeb
+  - DOMAIN-SUFFIX,bigme.pro  
+  # #杂七杂八的
+  - DOMAIN-SUFFIX,mypikpak.com
+  - DOMAIN-SUFFIX,mingpao.com
+  # #腾讯云用的支付商域名
+  - DOMAIN-SUFFIX,harvestsharp.com

@@ -1,0 +1,106 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+STOP=15
+
+USE_PROCD=1
+PROG=/usr/bin/mihomo
+CONF_DIR=/etc/mihomo
+CONF_FILE=$CONF_DIR/config.yaml
+
+FW_SCRIPT=$CONF_DIR/iptables.sh
+
+start_service() {
+    config_load mihomo
+    config_get_bool enabled "main" "enabled" 0
+    [ "$enabled" -eq 1 ] || {
+        [ -x "$FW_SCRIPT" ] && "$FW_SCRIPT" stop
+        return 1
+    }
+
+    config_get mode "main" "mode" "Rule"
+    config_get log_level "main" "log_level" "info"
+    config_get_bool ipv6 "main" "ipv6" 0
+    config_get_bool allow_lan "main" "allow_lan" 1
+    config_get mixed_port "main" "mixed_port" "7890"
+    config_get redir_port "main" "redir_port" "7892"
+    config_get tproxy_port "main" "tproxy_port" "7893"
+
+    if [ ! -s "$CONF_FILE" ]; then
+        echo "config.yaml not found or empty, generating minimal config..."
+        cat > "$CONF_FILE" <<'EOF'
+mixed-port: 7890
+redir-port: 7892
+tproxy-port: 7893
+allow-lan: true
+bind-address: '*'
+mode: rule
+log-level: info
+ipv6: false
+external-controller: 0.0.0.0:9090
+secret: ''
+dns:
+  enable: true
+  listen: 0.0.0.0:1053
+  enhanced-mode: fake-ip
+  fake-ip-range: 28.0.0.1/8
+  nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+  fallback:
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
+proxies: []
+proxy-groups:
+  - name: PROXY
+    type: select
+    proxies: []
+rules:
+  - MATCH,DIRECT
+EOF
+    fi
+
+    # 根据 UCI 更新 config.yaml 关键字段
+    [ -f "$CONF_FILE" ] && {
+        sed -i "/^mode:/c\\mode: $mode" "$CONF_FILE"
+        sed -i "/^log-level:/c\\log-level: $log_level" "$CONF_FILE"
+        sed -i "/^ipv6:/c\\ipv6: $([ "$ipv6" -eq 1 ] && echo true || echo false)" "$CONF_FILE"
+        sed -i "/^allow-lan:/c\\allow-lan: $([ "$allow_lan" -eq 1 ] && echo true || echo false)" "$CONF_FILE"
+        sed -i "/^mixed-port:/c\\mixed-port: $mixed_port" "$CONF_FILE"
+        sed -i "/^redir-port:/c\\redir-port: $redir_port" "$CONF_FILE"
+        sed -i "/^tproxy-port:/c\\tproxy-port: $tproxy_port" "$CONF_FILE"
+    }
+
+    # 同步 iptables.sh 端口
+    [ -f "$FW_SCRIPT" ] && {
+        sed -i "s/^MIHOMO_REDIR_PORT=.*/MIHOMO_REDIR_PORT=$redir_port/" "$FW_SCRIPT"
+        sed -i "s/^MIHOMO_TPROXY_PORT=.*/MIHOMO_TPROXY_PORT=$tproxy_port/" "$FW_SCRIPT"
+    }
+
+    [ -d /sys/class/net/tun ] || modprobe tun 2>/dev/null
+
+    procd_open_instance
+    procd_set_param command $PROG -d $CONF_DIR -f $CONF_FILE
+    procd_set_param respawn
+    procd_set_param stderr 1
+    procd_set_param stdout 1
+    procd_close_instance
+
+    (
+        sleep 3
+        [ -x "$FW_SCRIPT" ] && "$FW_SCRIPT" start
+    ) &
+}
+
+stop_service() {
+    [ -x "$FW_SCRIPT" ] && "$FW_SCRIPT" stop
+}
+
+service_triggers() {
+    procd_add_reload_trigger "mihomo"
+}
+
+restart() {
+    stop
+    start
+}

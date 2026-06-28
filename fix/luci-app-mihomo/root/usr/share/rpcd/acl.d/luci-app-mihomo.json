@@ -1,0 +1,28 @@
+{
+    "luci-app-mihomo": {
+        "description": "Grant access to LuCI app mihomo",
+        "read": {
+            "uci": ["mihomo"],
+            "ubus": {
+                "file": ["list", "read"],
+                "luci-app-mihomo": ["getStatus"]
+            },
+            "file": {
+                "/": ["list", "read"],
+                "/*": ["list", "read"]
+            }
+        },
+        "write": {
+            "uci": ["mihomo"],
+            "ubus": {
+                "file": ["write"],
+                "luci-app-mihomo": ["setNode"],
+                "uci": ["set", "apply"]
+            },
+            "file": {
+                "/etc/mihomo/*": ["write"],
+                "/tmp/*": ["write"]
+            }
+        }
+    }
+}

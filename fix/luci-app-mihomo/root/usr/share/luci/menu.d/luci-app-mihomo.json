@@ -1,0 +1,13 @@
+{
+    "admin/vpn/mihomo": {
+        "title": "Mihomo",
+        "order": 50,
+        "action": {
+            "type": "view",
+            "path": "luci-app-mihomo"
+        },
+        "depends": {
+            "acl": ["luci-app-mihomo"]
+        }
+    }
+}

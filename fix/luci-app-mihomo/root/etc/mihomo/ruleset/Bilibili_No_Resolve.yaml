@@ -1,0 +1,16 @@
+payload:
+  # Bilibili  
+  - DOMAIN-SUFFIX,bilibili.com
+  - DOMAIN-SUFFIX,bilibili.tv
+  - DOMAIN-SUFFIX,biliapi.net
+  - DOMAIN-SUFFIX,biliapi.com
+  - DOMAIN-SUFFIX,bilivideo.com
+  - DOMAIN-SUFFIX,acgvideo.com
+  - DOMAIN-SUFFIX,acg.tv
+  - DOMAIN-SUFFIX,b23.tv
+  - DOMAIN-SUFFIX,hdslb.com
+  - DOMAIN,upos-hz-mirrorakam.akamaized.net
+  - DOMAIN-KEYWORD,bilibili
+  - DOMAIN-KEYWORD,cn-hk-eq-bcache-
+  - IP-CIDR,121.11.192.0/24,no-resolve
+  - DOMAIN,apiintl.biliapi.net
