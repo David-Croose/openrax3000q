@@ -12,16 +12,35 @@ get_status() {
     local proxy_info=$(curl -s --connect-timeout 3 http://127.0.0.1:9090/proxies/Proxies 2>/dev/null)
     if [ -n "$proxy_info" ]; then
         proxy_node=$(echo "$proxy_info" | jsonfilter -e '@.now' 2>/dev/null || echo "Unknown")
+        case "$proxy_node" in
+            *剩余流量*|*距离下次重置*|*套餐到期*|*客服邮箱*|*支持AI*)
+                proxy_node="Unknown"
+                ;;
+        esac
         local alive=$(echo "$proxy_info" | jsonfilter -e '@.alive' 2>/dev/null || echo "false")
         [ "$alive" = "true" ] && online="true"
+
+        local all_raw=$(echo "$proxy_info" | jsonfilter -e '@.all[*]' 2>/dev/null)
 
         all_nodes_json="["
         while IFS= read -r node; do
             all_nodes_json="$all_nodes_json\"$node\","
         done <<EOF
-$(echo "$proxy_info" | jsonfilter -e '@.all[*]' 2>/dev/null)
+$(echo "$all_raw" | grep -vF '剩余流量' | grep -vF '距离下次重置' | grep -vF '套餐到期' | grep -vF '客服邮箱' | grep -vF '支持AI')
 EOF
         all_nodes_json="${all_nodes_json%,}]"
+
+        info_lines_json="["
+        while IFS= read -r node; do
+            info_lines_json="$info_lines_json\"$node\","
+        done <<EOF
+$(echo "$all_raw" | grep -F '剩余流量')
+$(echo "$all_raw" | grep -F '距离下次重置')
+$(echo "$all_raw" | grep -F '套餐到期')
+$(echo "$all_raw" | grep -F '客服邮箱')
+$(echo "$all_raw" | grep -F '支持AI')
+EOF
+        info_lines_json="${info_lines_json%,}]"
     fi
 
     local sub_url=$(uci get mihomo.main.subscribe_url 2>/dev/null)
@@ -35,7 +54,7 @@ EOF
         fi
     fi
 
-    printf '{"proxy_node":"%s","online":%s,"upload":"%s","download":"%s","total":"%s","expire":"%s","all_nodes":%s}' "$proxy_node" "$online" "$upload" "$download" "$total" "$expire" "$all_nodes_json"
+    printf '{"proxy_node":"%s","online":%s,"upload":"%s","download":"%s","total":"%s","expire":"%s","all_nodes":%s,"info_lines":%s}' "$proxy_node" "$online" "$upload" "$download" "$total" "$expire" "$all_nodes_json" "$info_lines_json"
 }
 
 set_node() {
@@ -46,9 +65,78 @@ set_node() {
     echo '{"result":"ok"}'
 }
 
+update_subscription() {
+    local sub_url=$(uci get mihomo.main.subscribe_url 2>/dev/null)
+    if [ -z "$sub_url" ]; then
+        echo '{"result":"error","message":"No subscription URL configured"}'
+        return
+    fi
+
+    local tmp_file="/tmp/mihomo_sub.yaml"
+    if ! curl -sL --connect-timeout 10 -H "User-Agent: ClashMetaForAndroid/2.8.9" "$sub_url" -o "$tmp_file" 2>/dev/null; then
+        echo '{"result":"error","message":"Failed to download subscription"}'
+        return
+    fi
+
+    if [ ! -s "$tmp_file" ]; then
+        echo '{"result":"error","message":"Empty subscription content"}'
+        return
+    fi
+
+    # If not YAML, try base64 decode
+    if ! grep -q '^proxies:' "$tmp_file"; then
+        local decoded="/tmp/mihomo_sub_decoded.yaml"
+        base64 -d "$tmp_file" > "$decoded" 2>/dev/null
+        if [ -s "$decoded" ] && grep -q '^proxies:' "$decoded"; then
+            mv "$decoded" "$tmp_file"
+        else
+            echo '{"result":"error","message":"Invalid subscription format (not Clash YAML)"}'
+            return
+        fi
+    fi
+
+    cp /etc/mihomo/config.yaml /etc/mihomo/config.yaml.bak 2>/dev/null
+    cp "$tmp_file" /etc/mihomo/config.yaml
+
+    # Ensure first proxy-group is named Proxies for UI consistency
+    if ! grep -q 'name: Proxies' /etc/mihomo/config.yaml; then
+        awk '
+            /^proxy-groups:/{in_groups=1}
+            in_groups {
+                if (/{ name:/) {
+                    sub(/{ name: [^,]*,/, "{ name: Proxies,")
+                    in_groups=0
+                } else if (/^  - name:/) {
+                    sub(/^  - name:.*/, "  - name: Proxies")
+                    in_groups=0
+                }
+            }
+            {print}
+        ' /etc/mihomo/config.yaml > /tmp/mihomo_cfg_fixed.yaml && mv /tmp/mihomo_cfg_fixed.yaml /etc/mihomo/config.yaml
+    fi
+
+    /etc/init.d/mihomo restart >/dev/null 2>&1
+
+    # Wait for mihomo API to be ready before returning
+    for i in 1 2 3 4 5 6 7 8 9 10; do
+        if curl -s --connect-timeout 1 http://127.0.0.1:9090/proxies/Proxies >/dev/null 2>&1; then
+            break
+        fi
+        sleep 1
+    done
+
+    # Switch to first real node (skip fake info nodes)
+    local first_real=$(curl -s http://127.0.0.1:9090/proxies/Proxies | jsonfilter -e '@.all[*]' 2>/dev/null | grep -vF '剩余流量' | grep -vF '距离下次重置' | grep -vF '套餐到期' | grep -vF '客服邮箱' | grep -vF '支持AI' | head -n 1)
+    if [ -n "$first_real" ]; then
+        curl -s -X PUT -H "Content-Type: application/json" -d "{\"name\":\"$first_real\"}" http://127.0.0.1:9090/proxies/Proxies >/dev/null 2>&1
+    fi
+
+    echo '{"result":"ok"}'
+}
+
 case "$1" in
     list)
-        echo '{"getStatus":{},"setNode":{"name":"String"}}'
+        echo '{"getStatus":{},"setNode":{"name":"String"},"updateSubscription":{}}'
         ;;
     call)
         case "$2" in
@@ -59,6 +147,9 @@ case "$1" in
                 read -r input
                 local name=$(echo "$input" | jsonfilter -e '$.name' 2>/dev/null)
                 set_node "$name"
+                ;;
+            updateSubscription)
+                update_subscription
                 ;;
         esac
         ;;

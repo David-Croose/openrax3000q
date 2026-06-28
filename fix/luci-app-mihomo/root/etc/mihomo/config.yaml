@@ -20,9 +20,5 @@ dns:
     - https://1.1.1.1/dns-query
     - https://8.8.8.8/dns-query
 proxies: []
-proxy-groups:
-  - name: PROXY
-    type: select
-    proxies: []
 rules:
   - MATCH,DIRECT

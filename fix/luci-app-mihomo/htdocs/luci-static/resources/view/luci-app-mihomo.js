@@ -17,6 +17,11 @@ var callSetNode = rpc.declare({
     expect: {}
 });
 
+var callUpdateSubscription = rpc.declare({
+    object: 'luci-app-mihomo',
+    method: 'updateSubscription'
+});
+
 function formatBytes(bytes) {
     bytes = parseInt(bytes) || 0;
     if (bytes === 0) return '0 B';
@@ -40,7 +45,8 @@ return view.extend({
                 download: '0',
                 total: '0',
                 expire: '0',
-                all_nodes: []
+                all_nodes: [],
+                info_lines: []
             };
         });
     },
@@ -58,6 +64,22 @@ return view.extend({
         o = s.option(form.Value, 'subscribe_url', _('Subscription URL'), _('Clash subscription link for updating proxy nodes.'));
         o.datatype = 'string';
         o.placeholder = 'https://example.com/subscribe?token=xxx';
+
+        o = s.option(form.Button, '_update_sub', _('Update Subscription'));
+        o.inputtitle = _('Update Now');
+        o.inputstyle = 'action';
+        o.onclick = function(ev, section_id) {
+            return callUpdateSubscription().then(function(res) {
+                if (res && res.result === 'ok') {
+                    window.location.reload();
+                } else {
+                    var msg = (res && res.message) ? res.message : JSON.stringify(res);
+                    alert(_('Update failed') + ': ' + msg);
+                }
+            }).catch(function(err) {
+                alert(_('Update failed') + ': ' + (err.message || String(err)));
+            });
+        };
 
         o = s.option(form.ListValue, 'selected_node', _('Current Node'));
         var nodeSet = {};
@@ -119,6 +141,14 @@ return view.extend({
             var usedStr = formatBytes(used);
             var totalStr = total ? formatBytes(total) : _('Unknown');
             return usedStr + ' / ' + totalStr;
+        };
+
+        o = s.option(form.DummyValue, '_sub_info', _('Subscription Info'));
+        o.cfgvalue = function() {
+            if (data.info_lines && data.info_lines.length) {
+                return data.info_lines.join('  |  ');
+            }
+            return '';
         };
 
         o = s.option(form.ListValue, 'mode', _('Proxy Mode'), _('Global forces all traffic through proxy; Rule uses rule-based routing.'));

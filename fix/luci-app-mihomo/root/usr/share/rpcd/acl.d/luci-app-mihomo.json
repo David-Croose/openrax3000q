@@ -16,7 +16,7 @@
             "uci": ["mihomo"],
             "ubus": {
                 "file": ["write"],
-                "luci-app-mihomo": ["setNode"],
+                "luci-app-mihomo": ["setNode", "updateSubscription"],
                 "uci": ["set", "apply"]
             },
             "file": {

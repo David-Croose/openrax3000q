@@ -51,24 +51,44 @@ dns:
     - https://1.1.1.1/dns-query
     - https://8.8.8.8/dns-query
 proxies: []
-proxy-groups:
-  - name: PROXY
-    type: select
-    proxies: []
 rules:
   - MATCH,DIRECT
 EOF
     fi
 
-    # 根据 UCI 更新 config.yaml 关键字段
+    # 根据 UCI 更新 config.yaml 关键字段（不存在则追加，存在则替换）
     [ -f "$CONF_FILE" ] && {
-        sed -i "/^mode:/c\\mode: $mode" "$CONF_FILE"
-        sed -i "/^log-level:/c\\log-level: $log_level" "$CONF_FILE"
-        sed -i "/^ipv6:/c\\ipv6: $([ "$ipv6" -eq 1 ] && echo true || echo false)" "$CONF_FILE"
-        sed -i "/^allow-lan:/c\\allow-lan: $([ "$allow_lan" -eq 1 ] && echo true || echo false)" "$CONF_FILE"
-        sed -i "/^mixed-port:/c\\mixed-port: $mixed_port" "$CONF_FILE"
-        sed -i "/^redir-port:/c\\redir-port: $redir_port" "$CONF_FILE"
-        sed -i "/^tproxy-port:/c\\tproxy-port: $tproxy_port" "$CONF_FILE"
+        local _ipv6=$([ "$ipv6" -eq 1 ] && echo true || echo false)
+        local _allow_lan=$([ "$allow_lan" -eq 1 ] && echo true || echo false)
+
+        for keyval in "mode:$mode" "log-level:$log_level" "ipv6:$_ipv6" "allow-lan:$_allow_lan" "mixed-port:$mixed_port" "redir-port:$redir_port" "tproxy-port:$tproxy_port"; do
+            local key=$(echo "$keyval" | cut -d: -f1)
+            local val=$(echo "$keyval" | cut -d: -f2-)
+            if grep -q "^$key:" "$CONF_FILE"; then
+                sed -i "/^$key:/c\\$key: $val" "$CONF_FILE"
+            else
+                echo "$key: $val" >> "$CONF_FILE"
+            fi
+        done
+
+        # 订阅配置可能使用 port: 代替 mixed-port:
+        if grep -q "^port:" "$CONF_FILE"; then
+            if grep -q "^mixed-port:" "$CONF_FILE"; then
+                sed -i "/^port:/d" "$CONF_FILE"
+            else
+                sed -i "s/^port:.*/mixed-port: $mixed_port/" "$CONF_FILE"
+            fi
+        fi
+
+        # 确保 dns 段存在 enhanced-mode: fake-ip（透明代理必需）
+        if ! grep -q "enhanced-mode:" "$CONF_FILE"; then
+            sed -i '/^dns:/a\    enhanced-mode: fake-ip' "$CONF_FILE"
+        fi
+
+        # 确保 bind-address 存在
+        if ! grep -q "^bind-address:" "$CONF_FILE"; then
+            echo "bind-address: '*'" >> "$CONF_FILE"
+        fi
     }
 
     # 同步 iptables.sh 端口
