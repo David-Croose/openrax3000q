@@ -69,6 +69,7 @@ return view.extend({
         o = s.option(form.Button, '_update_sub', _('Update Subscription'));
         o.inputtitle = _('Update Now');
         o.inputstyle = 'action';
+        o.depends('enabled', '1');
         o.onclick = function(ev, section_id) {
             var self = this;
             var urlOpt = self.section.getOption('subscribe_url');

@@ -1,4 +1,3 @@
-
 config mihomo 'main'
 	option log_level 'info'
 	option ipv6 '0'
@@ -8,4 +7,3 @@ config mihomo 'main'
 	option tproxy_port '7893'
 	option mode 'Rule'
 	option enabled '0'
-

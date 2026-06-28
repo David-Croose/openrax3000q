@@ -146,3 +146,28 @@ msgstr "Mihomo"
 #: root/usr/share/rpcd/acl.d/luci-app-mihomo.json:3
 msgid "Grant access to LuCI app mihomo"
 msgstr "授权访问 LuCI mihomo 应用"
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:61
+msgid "Update Subscription"
+msgstr "更新订阅"
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:62
+msgid "Update Now"
+msgstr "立即更新"
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:68
+msgid "Please enter a subscription URL first"
+msgstr "请先输入订阅链接"
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:100
+msgid "Subscription updated successfully"
+msgstr "订阅更新成功"
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:103
+msgid "Subscription updated, but failed to refresh node list"
+msgstr "订阅已更新，但刷新节点列表失败"
+
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:107
+#: htdocs/luci-static/resources/view/luci-app-mihomo.js:109
+msgid "Update failed"
+msgstr "更新失败"
