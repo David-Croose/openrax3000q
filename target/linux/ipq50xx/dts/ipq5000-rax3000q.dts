@@ -248,7 +248,7 @@
 			compatible = "qcom,ess-switch-qca83xx";
 			device_id = <1>;
 
-			reset_gpio = <26>;
+			reset_gpio = <&tlmm 26 GPIO_ACTIVE_LOW>;
 
 			switch_access_mode = "mdio";
 			mdio-bus = <&mdio1>;
@@ -323,7 +323,7 @@
 		local-mac-address = [000000000000];
 		mdio-bus = <&mdio0>;
 		qcom,phy-mdio-addr = <7>;
-		phy-mode = "internal";
+		phy-mode = "sgmii";
 		qcom,link-poll = <1>;
 	};
 
@@ -358,7 +358,7 @@
 	pinctrl-names = "default";
 	status = "ok";
 
-	reset-gpios = <&tlmm 26 GPIO_ACTIVE_LOW>;
+	phy-reset-gpio = <&tlmm 26 0>;
 
 	// QCA8337 Phy0 -> WAN
 	ethernet-phy@0 {
